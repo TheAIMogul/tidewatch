@@ -86,6 +86,8 @@ export interface DonorRow {
 export interface DonorsResp { items: DonorRow[] }
 
 export type Heat = "l0" | "l1" | "l2" | "l3" | "miss" | "fut";
+/** One ledger entry. Append-only: entries are never edited or deleted. */
+export interface Note { id: number; donorId: number; author: string; kind: "note" | "call" | "merge"; body: string; createdAt: string }
 export interface Outreach { id: number; draft: string; facts: unknown; check_p: number | null; status: "draft" | "called"; model: string; created_at: string }
 /** GET /api/donors/:id */
 export interface DonorDetail {
@@ -99,7 +101,9 @@ export interface DonorDetail {
   heat: { years: number[]; cells: Record<string, Heat[]> };   // cells[year] has 12 entries, Jan..Dec
   outreach: Outreach | null;
   decisions: Decision[];
+  notes: Note[];                                              // newest first
 }
+/** POST /api/donors/:id/notes  body: { body: string } -> Note */
 /** POST /api/donors/:id/draft -> Outreach      (new gpt-5.5 draft, checked by Decisions) */
 /** POST /api/donors/:id/called -> { ok: true } */
 

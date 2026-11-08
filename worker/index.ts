@@ -64,6 +64,12 @@ async function clusterRecords(env: Env, clusterIds: number[]) {
   return out;
 }
 
+async function addNote(env: Env, donorId: number, kind: T.Note["kind"], body: string): Promise<T.Note> {
+  const createdAt = now();
+  const r = await env.DB.prepare("INSERT INTO donor_notes (donor_id, author, kind, body, created_at) VALUES (?,?,?,?,?) RETURNING id").bind(donorId, env.STAFF_NAME, kind, body, createdAt).first<{ id: number }>();
+  return { id: r!.id, donorId, author: env.STAFF_NAME, kind, body, createdAt };
+}
+
 async function donorById(env: Env, id: number) { return env.DB.prepare("SELECT * FROM donors WHERE id = ?").bind(id).first<any>(); }
 
 async function candidate(env: Env, row: any): Promise<T.Cand> {
@@ -211,14 +217,17 @@ app.post("/candidates/:id/merge", async (c) => {
   const a = await env.DB.prepare("SELECT donor_id FROM records WHERE cluster_id = ? LIMIT 1").bind(row.a_cluster).first<any>();
   const b = await env.DB.prepare("SELECT donor_id FROM records WHERE cluster_id = ? LIMIT 1").bind(row.b_cluster).first<any>();
   const keep = a.donor_id, drop = b.donor_id;
+  const names = [...new Set((await env.DB.prepare("SELECT name FROM records WHERE cluster_id IN (?, ?)").bind(row.a_cluster, row.b_cluster).all<{ name: string }>()).results.map((r) => r.name))];
   if (keep !== drop) {
     await env.DB.batch([
+      env.DB.prepare("UPDATE donor_notes SET donor_id = ? WHERE donor_id = ?").bind(keep, drop),
       env.DB.prepare("UPDATE records SET donor_id = ? WHERE donor_id = ?").bind(keep, drop),
       env.DB.prepare("DELETE FROM outreach WHERE donor_id = ?").bind(drop),
       env.DB.prepare("DELETE FROM donors WHERE id = ?").bind(drop),
     ]);
   }
   await env.DB.prepare("UPDATE candidates SET status = 'merged', decided_by = ?, decided_at = ? WHERE id = ?").bind(env.STAFF_NAME, now(), id).run();
+  await addNote(env, keep, "merge", `Merged ${names.length} records: ${names.join(", ")}. OpenAI Decisions said ${(row.probability ?? 0).toFixed(2)} same donor.`);
   await rebuildDonor(env, keep);
   const sets: string[] = [], vals: unknown[] = [];
   for (const k of ["name", "email", "phone", "street"] as const) if (body[k]) { sets.push(`${k} = ?`); vals.push(body[k]); }
@@ -274,6 +283,7 @@ app.get("/donors/:id", async (c) => {
   const { results: recs } = await env.DB.prepare("SELECT s.code, s.label AS source, r.name, (SELECT COUNT(*) FROM gifts g WHERE g.record_id = r.id AND g.status = 'ok') AS gifts FROM records r JOIN sources s ON s.id = r.source_id WHERE r.donor_id = ? ORDER BY s.id").bind(id).all<any>();
   const o = await env.DB.prepare("SELECT * FROM outreach WHERE donor_id = ? ORDER BY id DESC LIMIT 1").bind(id).first<any>();
   const { results: dec } = await env.DB.prepare("SELECT id, kind, qtype, question, subject, ref_id, answer, probability, latency_ms, cost, created_at FROM decisions WHERE ref_id = ? AND kind IN ('lapse','channel','draft_check') ORDER BY id DESC LIMIT 10").bind(id).all<T.Decision>();
+  const { results: notes } = await env.DB.prepare("SELECT id, donor_id AS donorId, author, kind, body, created_at AS createdAt FROM donor_notes WHERE donor_id = ? ORDER BY id DESC LIMIT 200").bind(id).all<T.Note>();
   const detail: T.DonorDetail = {
     donor: { ...rowOf(d), email: d.email, altEmails: JSON.parse(d.alt_emails ?? "[]"), phone: d.phone, street: d.street, zip: d.zip, reason: d.reason, expected: d.expected, atRisk: d.at_risk,
       giftCount: d.gift_count, firstGift: d.first_gift, years: d.years, loyalty: d.loyalty, designation: d.designation, riskLabel: d.risk_label, channel: d.channel, calledAt: d.called_at },
@@ -281,6 +291,7 @@ app.get("/donors/:id", async (c) => {
     heat: heat(gifts, d.state, d.expected, env.TODAY),
     outreach: o ? { id: o.id, draft: o.draft, facts: JSON.parse(o.facts ?? "null"), check_p: o.check_p, status: o.status, model: o.model, created_at: o.created_at } : null,
     decisions: dec,
+    notes,
   };
   return c.json(detail);
 });
@@ -303,11 +314,22 @@ app.post("/donors/:id/called", async (c) => {
     c.env.DB.prepare("UPDATE donors SET called_at = ? WHERE id = ?").bind(at, id),
     c.env.DB.prepare("UPDATE outreach SET status = 'called' WHERE id = (SELECT id FROM outreach WHERE donor_id = ? ORDER BY id DESC LIMIT 1)").bind(id),
   ]);
+  await addNote(c.env, id, "call", "Marked as called.");
   return c.json({ ok: true });
 });
 
+app.post("/donors/:id/notes", async (c) => {
+  const id = +c.req.param("id");
+  const { body } = (await c.req.json().catch(() => ({}))) as { body?: string };
+  const text = String(body ?? "").trim();
+  if (!text) return c.json({ error: "Write something first." }, 400);
+  if (text.length > 4000) return c.json({ error: "Keep notes under 4,000 characters." }, 400);
+  if (!(await donorById(c.env, id))) return c.json({ error: "not found" }, 404);
+  return c.json(await addNote(c.env, id, "note", text));
+});
+
 // ---------- import / reset ----------
-const WIPE = ["DELETE FROM gifts", "DELETE FROM records", "DELETE FROM donors", "DELETE FROM candidates", "DELETE FROM outreach", "DELETE FROM sources"];
+const WIPE = ["DELETE FROM donor_notes", "DELETE FROM gifts", "DELETE FROM records", "DELETE FROM donors", "DELETE FROM candidates", "DELETE FROM outreach", "DELETE FROM sources"];
 
 app.post("/import", async (c) => {
   const env = c.env;

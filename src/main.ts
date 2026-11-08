@@ -400,9 +400,10 @@ async function renderDonor(v: HTMLElement, id: number) {
           <div class="na"><button class="btn" id="regen">${out ? "Regenerate" : "Write note"}</button><button class="btn" id="copy" ${out ? "" : "disabled"}>Copy</button><button class="btn acc" id="called" style="margin-left:auto" ${o.calledAt ? "disabled" : ""}>${o.calledAt ? "Called " + ago(o.calledAt) : "Mark called"}</button></div></div>
         <div class="card tl"><div class="ch"><h3>Timeline</h3><span class="s">${d.gifts.length} entries · ${d.records.length} source${d.records.length > 1 ? "s" : ""}</span></div>
           ${d.gifts.slice(0, 14).map((g) => `<div class="t"><span class="d">${date(g.date)}</span><span class="b" style="background:${COLORS[g.code]}"></span><span>${esc(g.source)}${g.designation ? ` · ${esc(g.designation)}` : ""}${g.status === "declined" ? ` <span class="chip risk" style="height:18px">Declined</span>` : ""}</span><span class="mono">${money(g.amount)}</span></div>`).join("")}</div>
-      </div></div></div>`;
+      </div>${notesCard(d, first(o.name))}</div></div>`;
+  bindNotes(id);
   $("#callBtn").addEventListener("click", () => { if (o.phone) location.href = `tel:${o.phone.replace(/\D/g, "")}`; else toast("No phone on file. Use the note by email."); });
-  $("#logBtn").addEventListener("click", () => toast("Activity log is coming next."));
+  $("#logBtn").addEventListener("click", () => { $("#notes")?.scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => $<HTMLTextAreaElement>("#noteText")?.focus(), 350); });
   $("#copy").addEventListener("click", () => { navigator.clipboard.writeText(out?.draft ?? ""); toast("Note copied"); });
   $("#called").addEventListener("click", async () => { await post(`/donors/${id}/called`); toast(`Marked ${first(o.name)} as called`); render(); });
   $("#regen").addEventListener("click", async (e) => {
@@ -410,6 +411,35 @@ async function renderDonor(v: HTMLElement, id: number) {
     try { await post(`/donors/${id}/draft`); toast("New note drafted and fact-checked"); } catch (x: any) { toast(x.message); }
     render();
   });
+}
+// ---------- donor notes ledger ----------
+const stamp = (iso: string) => { const d = new Date(iso); return `${d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`; };
+function noteRow(n: T.Note, fresh = false) {
+  const chip = n.kind === "call" ? `<span class="chip acc">Call</span>` : n.kind === "merge" ? `<span class="chip info">Merge</span>` : `<span class="chip">Note</span>`;
+  return `<div class="ln ${fresh ? "fi new" : ""}"><div class="lt mono">${stamp(n.createdAt)}</div><div><div class="lm"><span class="initials" style="width:20px;height:20px;font-size:9px">${esc(initials(n.author))}</span><b>${esc(n.author)}</b>${chip}</div><div class="lx">${esc(n.body)}</div></div></div>`;
+}
+function notesCard(d: T.DonorDetail, firstName: string) {
+  const n = d.notes.length;
+  return `<div class="card notes" id="notes" style="margin-top:12px"><div class="ch"><h3>Notes</h3><span class="s" id="noteCount">${n} ${n === 1 ? "entry" : "entries"} · a ledger, entries can't be edited or deleted</span></div>
+    <div class="composer"><textarea id="noteText" rows="3" maxlength="4000" placeholder="Add a note about ${esc(firstName)}: a call, a preference, anything the next person should know."></textarea>
+      <div class="cbar"><span class="muted">Saved with today's date and time · ⌘↵ to save</span><button class="btn pri" id="saveNote">Save note</button></div></div>
+    <div class="ledger" id="ledger">${n ? d.notes.map((x) => noteRow(x)).join("") : `<div class="lempty">No notes yet. The first one starts the ledger.</div>`}</div></div>`;
+}
+function bindNotes(donorId: number) {
+  const ta = $<HTMLTextAreaElement>("#noteText"), btn = $<HTMLButtonElement>("#saveNote"); if (!ta || !btn) return;
+  const save = async () => {
+    const body = ta.value.trim(); if (!body) { ta.focus(); return; }
+    btn.disabled = true;
+    try {
+      const n = await post<T.Note>(`/donors/${donorId}/notes`, { body });
+      const led = $("#ledger"); led.querySelector(".lempty")?.remove(); led.insertAdjacentHTML("afterbegin", noteRow(n, true));
+      ta.value = ""; const c = led.querySelectorAll(".ln").length; $("#noteCount").textContent = `${c} ${c === 1 ? "entry" : "entries"} · a ledger, entries can't be edited or deleted`;
+      toast(`Note saved · ${stamp(n.createdAt)}`);
+    } catch (e: any) { toast(e.message); }
+    btn.disabled = false;
+  };
+  btn.addEventListener("click", save);
+  ta.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); save(); } });
 }
 const ord = (n: number) => (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] ?? "th");
 
