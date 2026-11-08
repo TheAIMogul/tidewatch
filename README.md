@@ -1,6 +1,6 @@
 # Tidewatch
 
-**Donor intelligence for nonprofits that live on exports.**
+**Turn messy donor exports into one clean list of people, and know who's about to stop giving while there's still time to call.**
 
 Drop in every donor list you have. Tidewatch resolves every human to one record, ranks everyone, and tells you who to call before the money stops.
 
@@ -48,14 +48,14 @@ All on Cloudflare.
 
 ## Design
 
-Dense, professional SaaS: 13px Geist, hairline borders, one accent, data tables, and the OpenAI Decisions calls shown live in the product.
+Dense, professional SaaS (13px Geist, data tables, one accent) on frosted glass over a slow gradient. Donor faces carry a badge for how many source records merged into them. A resolution flow draws how rows became people, and the merge review blooms over a blurred app. OpenAI Decisions calls are shown live in the product.
 
-`mockups/v4/index.html` is the current product prototype: Today, Duplicates, Donor and Import run screens. `mockups/v3` is the earlier stage-story version.
+`mockups/v5/index.html` is the current prototype: Today (with the resolution flow and merge modal), Duplicates, Donor and Import run. Earlier rounds are in `mockups/v2` to `v4`.
 
 ## Run the prototype
 
 ```bash
-open mockups/v4/index.html
+open mockups/v5/index.html
 ```
 
 ## Data

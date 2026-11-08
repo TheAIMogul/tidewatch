@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tidewatch</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF1F6; --panel:rgba(255,255,255,.74); --solid:#FFFFFF; --sub:#F6F6F5; --sub-2:#F0F0EE; --hover:#F4F4F3;
+  --line:rgba(12,12,14,.07); --line-2:rgba(12,12,14,.11); --line-3:rgba(12,12,14,.16);
+  --fg:#111113; --fg-2:#55555D; --fg-3:#8B8B94; --fg-4:#B4B4BB;
+  --accent:#0E7C6B; --accent-2:#0B6A5B; --accent-bg:#E9F4F1; --accent-line:rgba(14,124,107,.22);
+  --risk:#D4473A; --risk-bg:#FCEEEC; --risk-line:rgba(212,71,58,.2);
+  --warn:#B4741A; --warn-bg:#FBF3E3;
+  --info:#3A57D0; --info-bg:#EEF1FC;
+  --sans:'Geist',ui-sans-serif,system-ui,sans-serif; --mono:'Geist Mono',ui-monospace,monospace;
+  --r:6px; --r2:8px; --r3:10px;
+  --sh:0 1px 2px rgba(20,24,40,.04),0 8px 24px rgba(20,24,40,.05),0 0 0 1px rgba(12,12,14,.06);
+  --sh-pop:0 12px 32px rgba(12,12,14,.10),0 2px 6px rgba(12,12,14,.05),0 0 0 1px var(--line-2);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:linear-gradient(160deg,#EEF1F7 0%,#E9EDF5 50%,#F1ECEF 100%);color:var(--fg);font:400 13px/1.45 var(--sans);-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
+.mono,.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:0}
+button{font:inherit;color:inherit}
+h1,h2,h3,p{margin:0}
+.app{display:grid;grid-template-columns:250px 1fr;height:100vh;position:relative;z-index:1;transition:filter .45s cubic-bezier(.2,.8,.2,1),transform .45s cubic-bezier(.2,.8,.2,1)}
+.app.blur{filter:blur(8px) saturate(.9);transform:scale(.992)}
+
+/* sidebar */
+.side{margin:10px 0 10px 10px;height:calc(100vh - 20px);border-radius:16px;display:flex;flex-direction:column;padding:10px 10px 12px;background:rgba(255,255,255,.55);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);box-shadow:var(--sh);border:1px solid rgba(255,255,255,.7)}
+.ws{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:var(--r);cursor:pointer}
+.ws:hover{background:var(--hover)}
+.logo{width:22px;height:22px;border-radius:6px;background:#111113;position:relative;overflow:hidden;flex:none}
+.logo::after{content:'';position:absolute;left:-3px;right:-3px;bottom:4px;height:8px;background:#2BB39B;border-radius:50% 50% 0 0/100% 100% 0 0}
+.ws>div{min-width:0}
+.ws b{font-weight:600;font-size:13px;display:block;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ws span{font-size:11.5px;color:var(--fg-3);display:block;line-height:1.2}
+.ws svg{margin-left:auto;color:var(--fg-3)}
+.search{margin:10px 0 8px;display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border-radius:999px;background:var(--solid);box-shadow:var(--sh);color:var(--fg-3);font-size:12.5px}
+.search kbd{margin-left:auto;font:500 10.5px var(--mono);color:var(--fg-3);background:var(--sub);border-radius:4px;padding:1px 5px}
+.nav{display:flex;flex-direction:column;gap:1px}
+.nav .lab{font-size:11px;font-weight:500;color:var(--fg-3);padding:14px 8px 4px}
+.nav a{display:flex;align-items:center;gap:9px;height:30px;padding:0 8px;border-radius:var(--r);color:var(--fg-2);font-weight:500;cursor:pointer;text-decoration:none}
+.nav a:hover{background:var(--hover);color:var(--fg)}
+.nav a.on{background:var(--solid);color:var(--fg);box-shadow:var(--sh)}
+.nav a svg{width:15px;height:15px;color:var(--fg-3);flex:none}
+.nav a.on svg{color:var(--fg)}
+.nav a .c{margin-left:auto;font:500 11px var(--mono);color:var(--fg-3)}
+.nav a .c.hot{color:var(--risk);background:var(--risk-bg);padding:0 6px;border-radius:999px;line-height:18px}
+.side .foot{margin-top:auto;padding:10px 12px;border-radius:12px;background:var(--solid);box-shadow:var(--sh)}
+.side .foot .t{font-size:11.5px;color:var(--fg-3)}
+.side .foot .v{font-weight:600;font-size:13px;margin-top:2px;display:flex;align-items:baseline;gap:6px}
+.side .foot .v .mono{color:var(--risk)}
+.prog{height:4px;border-radius:999px;background:var(--sub-2);margin-top:8px;overflow:hidden}
+.prog i{display:block;height:100%;width:62%;background:var(--fg);border-radius:999px}
+svg.i{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* main */
+.main{display:flex;flex-direction:column;min-width:0;height:100vh;overflow:hidden}
+.top{height:56px;flex:none;display:flex;align-items:center;gap:10px;padding:0 24px;background:transparent}
+.crumb{display:flex;align-items:center;gap:6px;color:var(--fg-3);font-weight:500}
+.crumb b{color:var(--fg);font-weight:500}
+.top .r{margin-left:auto;display:flex;align-items:center;gap:8px}
+.live{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-2);padding:0 8px;height:26px;border-radius:999px;background:var(--panel);box-shadow:var(--sh)}
+.dot{width:6px;height:6px;border-radius:50%;background:#22A06B;box-shadow:0 0 0 0 rgba(34,160,107,.5);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,160,107,.45)}70%{box-shadow:0 0 0 6px rgba(34,160,107,0)}100%{box-shadow:0 0 0 0 rgba(34,160,107,0)}}
+.av{width:24px;height:24px;border-radius:50%;object-fit:cover;flex:none;box-shadow:0 0 0 1px var(--line)}
+.av.sm{width:20px;height:20px} .av.lg{width:40px;height:40px} .av.xl{width:56px;height:56px}
+.btn{height:30px;padding:0 13px;border-radius:999px;border:0;background:var(--panel);box-shadow:var(--sh);font-weight:500;font-size:12.5px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--fg);white-space:nowrap}
+.btn:hover{background:var(--hover)}
+.btn.pri{background:#111113;color:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.08)}
+.btn.pri:hover{background:#26262A}
+.btn.acc{background:var(--accent);color:#fff;box-shadow:0 1px 2px rgba(14,124,107,.3)}
+.btn.ghost{box-shadow:none;background:transparent;color:var(--fg-2)}
+.btn kbd{font:500 10.5px var(--mono);opacity:.6}
+.view{flex:1;overflow:auto;padding:20px 24px 32px;display:none}
+.view.on{display:block}
+.ph{display:flex;align-items:flex-end;gap:12px;margin-bottom:16px}
+.ph h1{font-size:20px;font-weight:600;letter-spacing:-.02em}
+.ph p{color:var(--fg-3);margin-top:2px;font-size:12.5px}
+.ph .r{margin-left:auto;display:flex;gap:8px}
+
+.card{background:var(--panel);border-radius:14px;box-shadow:var(--sh);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);border:1px solid rgba(255,255,255,.65)}
+.ch{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.ch h3{font-size:13px;font-weight:600}
+.ch .s{color:var(--fg-3);font-size:12px}
+.ch .r{margin-left:auto;display:flex;gap:6px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 7px;border-radius:999px;font-size:11.5px;font-weight:500;background:var(--sub);color:var(--fg-2);white-space:nowrap}
+.chip.acc{background:var(--accent-bg);color:var(--accent-2)} .chip.risk{background:var(--risk-bg);color:var(--risk)} .chip.warn{background:var(--warn-bg);color:var(--warn)} .chip.info{background:var(--info-bg);color:var(--info)}
+.chip .mono{font-size:11px}
+.seg{display:inline-flex;padding:2px;background:rgba(12,12,14,.05);border-radius:999px;gap:2px}
+.seg a{height:24px;padding:0 10px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;font-weight:500;font-size:12px;color:var(--fg-2);cursor:pointer}
+.seg a.on{background:var(--panel);color:var(--fg);box-shadow:var(--sh)}
+.seg a .mono{font-size:11px;color:var(--fg-3)}
+
+/* pipeline */
+.pipe{display:grid;grid-template-columns:repeat(6,1fr);position:relative}
+.pn{padding:12px 14px;position:relative}
+.pn+.pn{border-left:1px solid var(--line)}
+.pn .k{font-size:11.5px;color:var(--fg-3);display:flex;align-items:center;gap:6px}
+.pn .k i{width:6px;height:6px;border-radius:50%;background:var(--fg-4)}
+.pn .v{font:500 20px var(--mono);letter-spacing:-.02em;margin-top:4px}
+.pn .d{font-size:11.5px;color:var(--fg-3);margin-top:1px}
+.pn.risk .v{color:var(--risk)} .pn.risk .k i{background:var(--risk)}
+.pn.acc .k i{background:var(--accent)}
+.pn .arr{position:absolute;right:-7px;top:50%;margin-top:-7px;width:13px;height:13px;border-radius:50%;background:var(--solid);box-shadow:0 0 0 1px var(--line-2);display:grid;place-items:center;z-index:2;color:var(--fg-3)}
+.pn .arr svg{width:8px;height:8px}
+.pipefoot{display:flex;align-items:center;gap:10px;padding:8px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--fg-3);background:rgba(12,12,14,.025);border-radius:0 0 14px 14px}
+.pipefoot .src{display:flex;gap:4px}
+.sb{height:18px;padding:0 6px;border-radius:4px;font:500 10.5px var(--mono);display:inline-flex;align-items:center;background:var(--panel);box-shadow:0 0 0 1px var(--line);color:var(--fg-2)}
+.sb i{width:6px;height:6px;border-radius:2px;margin-right:5px}
+
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:12px 0}
+.kpi{padding:12px 14px 10px}
+.kpi .k{font-size:12px;color:var(--fg-2);display:flex;align-items:center;gap:6px}
+.kpi .row{display:flex;align-items:flex-end;justify-content:space-between;margin-top:6px}
+.kpi .v{font:500 22px var(--mono);letter-spacing:-.03em;line-height:1}
+.kpi .dl{font:500 11.5px var(--mono);margin-top:6px}
+.up{color:#1F8F5F} .down{color:var(--risk)}
+.spark{width:96px;height:30px}
+
+/* grid */
+.g2{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;align-items:start}
+
+/* table */
+table{width:100%;border-collapse:collapse}
+th{font-size:11.5px;font-weight:500;color:var(--fg-3);text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tbody tr{cursor:pointer;transition:background .12s}
+tbody tr:hover{background:var(--hover)}
+tbody tr.sel{background:#F7FBFA}
+.who{display:flex;align-items:center;gap:9px}
+.who b{font-weight:500;display:block;line-height:1.25}
+.who span{font-size:11.5px;color:var(--fg-3);display:block;line-height:1.25}
+.r-al{text-align:right}
+.cad{display:flex;gap:2px}
+.cad i{width:7px;height:14px;border-radius:2px;background:var(--sub-2)}
+.cad i.on{background:var(--accent)} .cad i.miss{background:var(--risk)} .cad i.fut{background:transparent;box-shadow:inset 0 0 0 1px var(--line-2)}
+.rk{display:flex;align-items:center;gap:8px}
+.rk .bar{width:56px;height:4px;border-radius:999px;background:var(--sub-2);overflow:hidden}
+.rk .bar i{display:block;height:100%;border-radius:999px;background:var(--risk)}
+.rk .bar i.m{background:var(--warn)}
+.rk .mono{font-size:12px;width:30px}
+
+/* feed */
+.feed{max-height:520px;overflow:hidden}
+.fi{padding:10px 14px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start}
+.fi:last-child{border-bottom:0}
+.fi .ic{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;background:var(--sub);color:var(--fg-2);flex:none}
+.fi .ic svg{width:12px;height:12px}
+.fi .q{font-size:12.5px;line-height:1.35}
+.fi .q b{font-weight:500}
+.fi .m{font-size:11px;color:var(--fg-3);margin-top:2px;font-family:var(--mono)}
+.fi .p{font:500 12px var(--mono);padding:2px 6px;border-radius:4px;background:var(--sub)}
+.fi .p.hi{background:var(--accent-bg);color:var(--accent-2)} .fi .p.lo{background:var(--risk-bg);color:var(--risk)}
+.fi.new{animation:slidein .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes slidein{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.fsum{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
+.fsum div{padding:10px 14px}
+.fsum div+div{border-left:1px solid var(--line)}
+.fsum .k{font-size:11px;color:var(--fg-3)} .fsum .v{font:500 14px var(--mono);margin-top:2px}
+
+/* duplicates */
+.dup{display:grid;grid-template-columns:320px minmax(0,1fr);gap:12px;align-items:start}
+.ql .it{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer}
+.ql .it:last-child{border-bottom:0}
+.ql .it:hover{background:var(--hover)}
+.ql .it.on{background:#F7FBFA;box-shadow:inset 2px 0 0 var(--accent)}
+.stack{display:flex}
+.stack .av{width:22px;height:22px;box-shadow:0 0 0 2px var(--panel)}
+.stack .av+.av{margin-left:-7px}
+.stack .n{width:22px;height:22px;border-radius:50%;margin-left:-7px;background:var(--sub-2);font:500 10px var(--mono);display:grid;place-items:center;box-shadow:0 0 0 2px var(--panel);color:var(--fg-2)}
+.ql b{font-weight:500;display:block}
+.ql .src{display:flex;gap:3px;margin-top:3px}
+.pr{font:500 12px var(--mono)}
+.pr.hi{color:var(--accent-2)} .pr.md{color:var(--warn)} .pr.lo{color:var(--risk)}
+.cmp{table-layout:fixed}
+.cmp th,.cmp td{padding:9px 12px;white-space:normal;font-size:12.5px;overflow-wrap:anywhere}
+.cmp th:first-child{width:96px}
+.cmp td:first-child{color:var(--fg-3)}
+.cmp td.pick{position:relative;background:var(--accent-bg)}
+.cmp td.pick::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:2px;border-radius:2px;background:var(--accent)}
+.cmp td.dim{color:var(--fg-4)}
+.cmp td.res{font-weight:500}
+.cmp .radio{display:inline-block;width:12px;height:12px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--line-3);vertical-align:-2px;margin-right:8px}
+.cmp td.pick .radio{box-shadow:inset 0 0 0 4px var(--accent)}
+.score{display:flex;align-items:center;gap:14px;padding:14px}
+.gauge{position:relative;width:56px;height:56px;flex:none}
+.gauge svg{transform:rotate(-90deg)}
+.gauge .v{position:absolute;inset:0;display:grid;place-items:center;font:500 14px var(--mono)}
+.ev{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.ev div{padding:9px 14px;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;font-size:12.5px}
+.ev div:nth-child(odd){border-right:1px solid var(--line)}
+.ev .ok{color:#1F8F5F} .ev .no{color:var(--fg-4)}
+pre.code{margin:0;padding:12px 14px;font:400 11.5px/1.55 var(--mono);color:var(--fg-2);background:rgba(12,12,14,.03);border-radius:0 0 14px 14px;overflow:hidden;white-space:pre-wrap}
+pre.code .k{color:#8A4FB8} pre.code .s{color:var(--accent-2)} pre.code .n{color:var(--info)}
+
+/* donor */
+.dn{display:grid;grid-template-columns:300px minmax(0,1fr);gap:12px;align-items:start}
+.prof{padding:16px}
+.prof .h{display:flex;gap:12px;align-items:center}
+.prof h2{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.prof .sub{color:var(--fg-3);font-size:12px}
+.kv{margin-top:14px;display:grid;grid-template-columns:96px 1fr;gap:7px 10px;font-size:12.5px}
+.kv dt{color:var(--fg-3)} .kv dd{margin:0}
+.sect{border-top:1px solid var(--line);padding:12px 16px}
+.sect h4{margin:0 0 8px;font-size:11.5px;font-weight:500;color:var(--fg-3)}
+.lr{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12.5px}
+.lr .mono{margin-left:auto;font-size:12px;color:var(--fg-2)}
+.heat{display:grid;grid-template-columns:40px repeat(12,1fr);gap:4px;align-items:center;padding:14px}
+.heat .y{font:400 11px var(--mono);color:var(--fg-3)}
+.heat .m{font:400 10.5px var(--mono);color:var(--fg-4);text-align:center}
+.heat i{height:18px;border-radius:4px;background:var(--sub)}
+.heat i.l1{background:#BFE3DA} .heat i.l2{background:#5FB9A6} .heat i.l3{background:var(--accent)}
+.heat i.miss{background:var(--risk-bg);box-shadow:inset 0 0 0 1.5px var(--risk)}
+.heat i.fut{background:transparent;box-shadow:inset 0 0 0 1px var(--line-2)}
+.dgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:12px}
+.note{padding:14px 16px;font-size:13px;line-height:1.6;color:var(--fg)}
+.note p{margin:0 0 9px}
+.facts{display:flex;flex-wrap:wrap;gap:5px;padding:0 16px 12px}
+.check{display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--line);background:rgba(14,124,107,.05);font-size:12px;color:var(--fg-2)}
+.check .mono{color:var(--accent-2)}
+.na{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+.tl .t{display:grid;grid-template-columns:84px 14px 1fr auto;gap:10px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line);font-size:12.5px}
+.tl .t:last-child{border-bottom:0}
+.tl .t .d{font:400 11.5px var(--mono);color:var(--fg-3)}
+.tl .t .b{width:8px;height:8px;border-radius:50%;background:var(--accent);justify-self:center}
+.tl .t .b.c{background:var(--info)} .tl .t .b.g{background:var(--warn)}
+.tl .t .mono{font-size:12px}
+
+/* imports */
+.runs{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:12px;align-items:start}
+.steps .st{display:grid;grid-template-columns:22px 1fr auto auto;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.steps .st:last-child{border-bottom:0}
+.steps .ck{width:18px;height:18px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:#fff}
+.steps .ck svg{width:10px;height:10px;stroke-width:2.4}
+.steps .st b{font-weight:500;display:block}
+.steps .st span{font-size:11.5px;color:var(--fg-3)}
+.steps .st .t{font:400 11.5px var(--mono);color:var(--fg-3);width:52px;text-align:right}
+.steps .st .o{font:500 12px var(--mono)}
+.tech{font:500 10.5px var(--mono);color:var(--fg-3);background:var(--sub);border-radius:4px;padding:1px 6px;margin-left:6px}
+.srcs .s{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.srcs .s:last-child{border-bottom:0}
+.srcs .lg{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;font:600 10px var(--mono);color:#fff}
+.srcs b{font-weight:500;display:block} .srcs span{font-size:11.5px;color:var(--fg-3)}
+
+
+/* ---- v2 merged in ---- */
+.tide{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.blob{position:absolute;border-radius:50%;filter:blur(100px);opacity:.5;animation:drift 22s ease-in-out infinite alternate}
+.b1{width:760px;height:760px;left:-200px;top:-260px;background:#BFD9FF}
+.b2{width:640px;height:640px;right:-180px;top:22%;background:#CDEFE6;animation-delay:-8s}
+.b3{width:560px;height:560px;left:38%;bottom:-300px;background:#FFDCD3;animation-delay:-13s}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(60px,40px) scale(1.08)}}
+.avb{position:relative;flex:none;display:inline-block}
+.avb .b{position:absolute;right:-5px;bottom:-4px;min-width:15px;height:15px;border-radius:999px;background:var(--info);color:#fff;font:600 9px/15px var(--sans);text-align:center;padding:0 4px;box-shadow:0 0 0 2px #fff}
+.avb .b.r{background:var(--risk)} .avb .b.a{background:var(--accent)}
+.g2.tall{grid-template-columns:minmax(0,1fr) 340px;align-items:stretch}
+.g2.tall>.card{display:flex;flex-direction:column;min-height:0}
+.g2.tall .feed{flex:1;max-height:none;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 80%,transparent);mask-image:linear-gradient(180deg,#000 80%,transparent)}
+.board{position:relative;display:grid;grid-template-columns:1fr 1fr 1fr;column-gap:56px;padding:12px 14px 8px}
+.colh{font-size:11.5px;color:var(--fg-3);font-weight:500;margin-bottom:8px;display:flex;gap:6px;align-items:center}
+.colh .mono{font-size:10.5px;color:var(--fg-2);background:rgba(12,12,14,.05);border-radius:999px;padding:0 6px;line-height:16px}
+.fr{height:36px;display:flex;align-items:center;gap:8px;padding:0 10px 0 6px;border-radius:999px;background:rgba(255,255,255,.92);box-shadow:0 0 0 1px var(--line),0 1px 2px rgba(12,12,14,.04);margin-bottom:8px;font-size:12.5px;cursor:pointer;transition:transform .15s,box-shadow .15s;position:relative;z-index:1}
+.fr:hover{transform:translateX(2px);box-shadow:0 0 0 1px var(--line-2),0 6px 16px rgba(12,12,14,.08)}
+.fr .sbg{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#fff;font:600 8px var(--mono);flex:none;letter-spacing:0}
+.fr b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.fr .m{margin-left:auto;font:500 11.5px var(--mono);color:var(--fg-2);padding-left:6px}
+.fr .chip{margin-left:auto;height:18px;font-size:11px}
+.fr.hot{box-shadow:0 0 0 1.5px rgba(212,71,58,.35),0 6px 18px rgba(212,71,58,.14)}
+.fr.more{background:transparent;box-shadow:none;color:var(--fg-3);font-size:12px;padding-left:12px;cursor:default}
+.wires{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:visible}
+.wires path{fill:none;stroke-width:1.5;stroke-linecap:round}
+.wires path.t{stroke:var(--accent)} .wires path.c{stroke:var(--risk)} .wires path.p{stroke:var(--info);stroke-dasharray:3 4;opacity:.7}
+.wires circle{fill:#fff;stroke-width:1.5} .wires circle.t{stroke:var(--accent)} .wires circle.c{stroke:var(--risk)} .wires circle.p{stroke:var(--info)}
+.lgd{display:flex;gap:12px;font-size:11.5px;color:var(--fg-3)}
+.lgd span{display:flex;align-items:center;gap:5px}
+.lgd i{width:12px;height:0;border-top:1.5px solid}
+.mring{transform:rotate(-90deg)}
+.rings{display:flex;justify-content:space-around;padding:14px 10px 12px;border-bottom:1px solid var(--line)}
+.rings>div{text-align:center}
+.ring{position:relative;width:64px;height:64px;margin:0 auto}
+.ring svg{transform:rotate(-90deg)}
+.ring .v{position:absolute;inset:0;display:grid;place-items:center;font:500 14px var(--mono)}
+.rings .rl{font-size:11.5px;color:var(--fg-3);margin-top:6px}
+.scrim{position:fixed;inset:0;z-index:20;display:none;place-items:center;background:rgba(236,240,247,.3)}
+.scrim.on{display:grid}
+.modal{width:640px;border-radius:20px;padding:18px 20px 16px;background:rgba(255,255,255,.82);backdrop-filter:blur(30px) saturate(1.5);-webkit-backdrop-filter:blur(30px) saturate(1.5);border:1px solid rgba(255,255,255,.8);box-shadow:0 30px 80px rgba(20,24,40,.18),0 0 0 1px rgba(12,12,14,.06);animation:bloom .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes bloom{from{opacity:0;transform:scale(.9) translateY(12px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+.mh{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.mh h2{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.mh p{color:var(--fg-2);font-size:12.5px;margin-top:2px}
+.mh .gauge{margin-left:auto}
+.mrec{display:grid;grid-template-columns:30px 1fr 1.3fr auto;gap:12px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.9);box-shadow:0 0 0 1px var(--line);margin-bottom:8px}
+.mrec .sbg{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font:600 9px var(--mono)}
+.mrec b{font-weight:500;display:block} .mrec .d{font:400 11.5px var(--mono);color:var(--fg-3)}
+.mrec .ct{font:400 11.5px/1.45 var(--mono);color:var(--fg-2)}
+.mrec .k{font-size:11px;color:var(--accent-2);font-weight:500;text-align:right}
+.mev{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
+.mf{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.mf .n{font-size:12px;color:var(--fg-3);margin-right:auto}
+
+/* motion */
+.fade{animation:fade .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.static *{animation:none!important;transition:none!important}
+</style></head>
+<body>
+<div class="tide"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="app" id="app">
+  <aside class="side">
+    <div class="ws"><div class="logo"></div><div><b>Tidepath Family Alliance</b><span>Tidewatch · Nonprofit</span></div><svg class="i" viewBox="0 0 24 24"><path d="M7 10l5-5 5 5M7 14l5 5 5-5"/></svg></div>
+    <div class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Search donors<kbd>⌘K</kbd></div>
+    <nav class="nav">
+      <a data-v="today" class="on"><svg class="i" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Today</a>
+      <a data-v="donors-list"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.5-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.7.8 2.8 2.5 3.2 5.2"/></svg>Donors<span class="c">214</span></a>
+      <a data-v="duplicates"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="12" height="12" rx="2.5"/><path d="M9 21h9.5a2.5 2.5 0 0 0 2.5-2.5V9"/></svg>Duplicates<span class="c hot">7</span></a>
+      <a data-v="imports"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg>Imports<span class="c">4</span></a>
+      <div class="lab">Outreach</div>
+      <a data-v="donor"><svg class="i" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Call list<span class="c">11</span></a>
+      <a><svg class="i" viewBox="0 0 24 24"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg>Steward<span class="c">3</span></a>
+      <div class="lab">Workspace</div>
+      <a><svg class="i" viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15v-4M12 15V8M16 15v-6"/></svg>Reports</a>
+      <a><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Settings</a>
+    </nav>
+    <div class="foot"><div class="t">Give Miami Day · Thu, Nov 19</div><div class="v"><span class="mono">11 days</span><span style="font-weight:400;color:var(--fg-3);font-size:12px">· $18,400 at risk</span></div><div class="prog"><i></i></div></div>
+  </aside>
+
+  <main class="main">
+    <header class="top">
+      <div class="crumb" id="crumb"><b>Today</b></div>
+      <div class="r">
+        <div class="live"><span class="dot"></span>Decisions live · <span class="mono" id="qcount">1,248</span> questions</div>
+        <button class="btn"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg>Import</button>
+        <img class="av" src="https://i.pravatar.cc/64?img=47" alt="Denise">
+      </div>
+    </header>
+
+    <!-- TODAY -->
+    <section class="view on" id="v-today">
+      <div class="ph"><div><h1>Good afternoon, Denise</h1><p>Sunday, November 8 · Last import 2 minutes ago</p></div>
+        <div class="r"><button class="btn">Export call list</button><button class="btn pri">Start call session <kbd>⌘↵</kbd></button></div></div>
+
+      <div class="card fade">
+        <div class="pipe">
+          <div class="pn"><div class="k"><i></i>Sources</div><div class="v">4</div><div class="d">GMD, tickets, gala, checks</div><div class="arr"><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div></div>
+          <div class="pn"><div class="k"><i></i>Rows imported</div><div class="v" data-count="261">261</div><div class="d">Nov 2021 to Nov 2026</div><div class="arr"><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div></div>
+          <div class="pn acc"><div class="k"><i></i>Unique donors</div><div class="v" data-count="214">214</div><div class="d">after resolution</div><div class="arr"><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div></div>
+          <div class="pn"><div class="k"><i></i>Duplicates</div><div class="v" data-count="47">47</div><div class="d"><span style="color:var(--risk)">7 need review</span> · 40 auto</div><div class="arr"><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div></div>
+          <div class="pn"><div class="k"><i></i>Lapsing</div><div class="v" data-count="11">11</div><div class="d">expected gift is late</div><div class="arr"><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div></div>
+          <div class="pn risk"><div class="k"><i></i>Revenue at risk</div><div class="v">$18,400</div><div class="d">before Give Miami Day</div></div>
+        </div>
+        <div class="pipefoot"><div class="src"><span class="sb"><i style="background:#0E7C6B"></i>gmd-export.csv</span><span class="sb"><i style="background:#D4473A"></i>tickets.csv</span><span class="sb"><i style="background:#B4741A"></i>gala-2025.xlsx</span><span class="sb"><i style="background:#3A57D0"></i>check-log.xlsx</span></div><span style="margin-left:auto">Workflow run <span class="mono">#128</span> · 14.2s · <a style="color:var(--fg-2);text-decoration:underline;text-decoration-color:var(--line-3);cursor:pointer" data-go="imports">View run</a></span></div>
+      </div>
+
+      <div class="g2 tall" style="margin-top:12px">
+        <div class="card fade" style="animation-delay:.1s">
+          <div class="ch"><h3>Resolution flow</h3><span class="s">How 261 rows became 214 people</span><div class="r lgd"><span><i style="border-color:var(--accent)"></i>Merged</span><span><i style="border-color:var(--risk)"></i>Needs you</span><span><i style="border-color:var(--info);border-top-style:dashed"></i>Pending</span></div></div>
+          <div class="board" id="board">
+            <div class="col"><div class="colh">Came in <span class="mono">261</span></div>
+              <div class="fr fade" style="animation-delay:.2s"><span class="sbg" style="background:#0E7C6B">GMD</span><b>Rosa M. Delgado</b><span class="m">$250</span></div>
+              <div class="fr fade" style="animation-delay:.25s"><span class="sbg" style="background:#3A57D0">CHK</span><b>R. Delgado</b><span class="m">$500</span></div>
+              <div class="fr fade" style="animation-delay:.3s"><span class="sbg" style="background:#B4741A">GALA</span><b>Rosa Delgado</b><span class="m">$150</span></div>
+              <div class="fr fade" style="animation-delay:.35s"><span class="sbg" style="background:#0E7C6B">GMD</span><b>Theodore Baptiste</b><span class="m">$150</span></div>
+              <div class="fr fade" style="animation-delay:.4s"><span class="sbg" style="background:#D4473A">TIX</span><b>Josh Carter</b><span class="m">$1,500</span></div>
+              <div class="fr fade" style="animation-delay:.45s"><span class="sbg" style="background:#0E7C6B">GMD</span><b>Joshua Carter</b><span class="m">$100</span></div>
+            </div>
+            <div class="col"><div class="colh">One person <span class="mono">214</span></div>
+              <div class="fr hot fade" style="animation-delay:.6s" data-modal="1"><span class="avb"><img class="av" src="https://i.pravatar.cc/64?img=32"><span class="b r">3</span></span><b>Rosa M. Delgado</b><span class="chip risk">Review</span></div>
+              <div class="fr fade" style="animation-delay:.7s"><span class="avb"><img class="av" src="https://i.pravatar.cc/64?img=12"></span><b>Theodore Baptiste</b><span class="chip acc">Auto</span></div>
+              <div class="fr fade" style="animation-delay:.8s"><span class="avb"><img class="av" src="https://i.pravatar.cc/64?img=15"><span class="b">2</span></span><b>Joshua Carter</b><span class="chip info">0.93</span></div>
+              <div class="fr more">+ 211 more people</div>
+            </div>
+            <div class="col"><div class="colh">This week <span class="mono">11</span></div>
+              <div class="fr fade" style="animation-delay:.9s" data-go="donor"><svg class="mring" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="rgba(12,12,14,.08)" stroke-width="3"/><circle cx="12" cy="12" r="9" fill="none" stroke="#D4473A" stroke-width="3" stroke-dasharray="56.5" stroke-dashoffset="10.2" stroke-linecap="round"/></svg><b>Call Rosa</b><span class="m">$2,500</span></div>
+              <div class="fr fade" style="animation-delay:1s"><svg class="mring" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="rgba(12,12,14,.08)" stroke-width="3"/><circle cx="12" cy="12" r="9" fill="none" stroke="#D4473A" stroke-width="3" stroke-dasharray="56.5" stroke-dashoffset="5.6" stroke-linecap="round"/></svg><b>Fix Theodore's card</b><span class="m">$1,800</span></div>
+              <div class="fr fade" style="animation-delay:1.1s"><svg class="mring" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="rgba(12,12,14,.08)" stroke-width="3"/><circle cx="12" cy="12" r="9" fill="none" stroke="#0E7C6B" stroke-width="3" stroke-dasharray="56.5" stroke-dashoffset="45.2" stroke-linecap="round"/></svg><b>Thank Joshua once</b><span class="m">$850</span></div>
+              <div class="fr more">+ 8 more calls</div>
+            </div>
+            <svg class="wires" id="wires"></svg>
+          </div>
+        </div>
+        <div class="card fade" style="animation-delay:.3s;contain:size;overflow:hidden">
+          <div class="ch"><h3>OpenAI Decisions</h3><span class="s">gpt-6-luna</span><div class="r"><span class="chip acc"><span class="dot" style="width:5px;height:5px"></span>Live</span></div></div>
+          <div class="fsum"><div><div class="k">Questions</div><div class="v" id="qcount2">1,248</div></div><div><div class="k">Latency</div><div class="v">412 ms</div></div><div><div class="k">Cost</div><div class="v">$0.018</div></div></div>
+          <div class="feed" id="feed"></div>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <div class="card fade" style="animation-delay:.25s">
+          <div class="ch"><h3>Call before Give Miami Day</h3><span class="s">11 donors · ranked by revenue at risk</span><div class="r"><div class="seg"><a class="on">Lapsing <span class="mono">11</span></a><a>Failed cards <span class="mono">3</span></a><a>New <span class="mono">64</span></a></div></div></div>
+          <table>
+            <thead><tr><th>Donor</th><th>Giving pattern · 12 mo</th><th>Last gift</th><th>Lapse risk</th><th class="r-al">At risk</th><th>Outreach</th></tr></thead>
+            <tbody id="calls"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- DUPLICATES -->
+    <section class="view" id="v-duplicates">
+      <div class="ph"><div><h1>Duplicates</h1><p>Tidewatch never merges on its own below 95% confidence. Nothing is deleted; every merge can be undone.</p></div>
+        <div class="r"><button class="btn">Merge all above 95% <span class="mono" style="color:var(--fg-3)">3</span></button></div></div>
+      <div style="margin-bottom:12px"><div class="seg"><a class="on">Needs review <span class="mono">7</span></a><a>Auto-merged <span class="mono">40</span></a><a>Kept separate <span class="mono">3</span></a><a>Undone <span class="mono">0</span></a></div></div>
+      <div class="dup">
+        <div class="card ql" id="queue"></div>
+        <div>
+          <div class="card">
+            <div class="ch" style="padding:14px"><div class="stack"><img class="av" style="width:28px;height:28px" src="https://i.pravatar.cc/64?img=32"><div class="n" style="width:28px;height:28px">3</div></div><div><h3 style="font-size:14px">Rosa M. Delgado</h3><span class="s">3 records · GiveMiamiDay.org, Checks, Gala auction</span></div><div class="r"><button class="btn">Keep separate</button><button class="btn acc"><svg class="i" viewBox="0 0 24 24" style="stroke-width:2.2"><path d="M5 12l5 5 9-10"/></svg>Merge 3 records</button></div></div>
+            <table class="cmp">
+              <thead><tr><th></th><th><span class="sb"><i style="background:#0E7C6B"></i>GMD</span> &nbsp;Row 118</th><th><span class="sb"><i style="background:#3A57D0"></i>CHK</span> &nbsp;Row 9</th><th><span class="sb"><i style="background:#B4741A"></i>GALA</span> &nbsp;Bidder 44</th><th>Merged record</th></tr></thead>
+              <tbody>
+                <tr><td>Name</td><td class="pick"><span class="radio"></span>Rosa M. Delgado</td><td><span class="radio"></span>R. Delgado</td><td><span class="radio"></span>Rosa Delgado</td><td class="res">Rosa M. Delgado</td></tr>
+                <tr><td>Email</td><td class="pick"><span class="radio"></span>rosa.delgado@gmail.com</td><td><span class="radio"></span>rdelgado@yahoo.com</td><td class="dim">same as GMD</td><td class="res">rosa.delgado@gmail.com<div style="color:var(--fg-3);font-size:11.5px">+1 alternate email</div></td></tr>
+                <tr><td>Phone</td><td class="dim">—</td><td class="pick"><span class="radio"></span>(305) 555-0142</td><td class="dim">—</td><td class="res mono" style="font-size:12.5px">(305) 555-0142</td></tr>
+                <tr><td>Address</td><td class="pick"><span class="radio"></span>1420 SW 8th St, Miami 33135</td><td><span class="radio"></span>1420 SW 8 Street, Miami FL</td><td class="dim">—</td><td class="res">1420 SW 8th St, Miami 33135</td></tr>
+                <tr><td>Gifts</td><td class="mono" style="font-size:12px">3 · $700</td><td class="mono" style="font-size:12px">2 · $1,000</td><td class="mono" style="font-size:12px">1 · $150</td><td class="res mono" style="font-size:12px">6 · $1,850</td></tr>
+                <tr><td>Date range</td><td class="mono" style="font-size:12px">Nov '23 – Nov '25</td><td class="mono" style="font-size:12px">Dec '24 – Dec '25</td><td class="mono" style="font-size:12px">Mar '25</td><td class="res mono" style="font-size:12px">Nov '23 – Dec '25</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="g2" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);margin-top:12px">
+            <div class="card">
+              <div class="ch"><h3>Why we think so</h3></div>
+              <div class="score"><div class="gauge"><svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="24" fill="none" stroke="#F0F0EE" stroke-width="5"/><circle cx="28" cy="28" r="24" fill="none" stroke="#0E7C6B" stroke-width="5" stroke-dasharray="150.8" stroke-dashoffset="4.5" stroke-linecap="round"/></svg><div class="v">0.97</div></div><div><div style="font-weight:500">Very likely the same person</div><div style="color:var(--fg-3);font-size:12px;margin-top:2px">OpenAI Decisions read all three rows side by side. Signals below are computed, not guessed.</div></div></div>
+              <div class="ev"><div><span class="ok">✓</span>Street address normalizes equal</div><div><span class="ok">✓</span>Email shared by 2 of 3 rows</div><div><span class="ok">✓</span>Same ZIP · 33135</div><div><span class="ok">✓</span>Gifts never on the same day</div><div><span class="no">✕</span>Two different emails</div><div><span class="no">✕</span>No phone on GMD row</div></div>
+            </div>
+            <div class="card">
+              <div class="ch"><h3>Request</h3><span class="s mono">POST /v1/decisions</span><div class="r"><span class="chip">412 ms</span><span class="chip mono">$0.00004</span></div></div>
+<pre class="code">{
+  <span class="k">"model"</span>: <span class="s">"gpt-6-luna"</span>,
+  <span class="k">"input"</span>: [{ <span class="k">"type"</span>: <span class="s">"input_json"</span>, <span class="k">"data"</span>: {…} }],
+  <span class="k">"questions"</span>: [{
+    <span class="k">"type"</span>: <span class="s">"predicate"</span>,
+    <span class="k">"name"</span>: <span class="s">"same_person"</span>,
+    <span class="k">"instructions"</span>: <span class="s">"Are these records one human being?"</span>
+  }]
+}
+<span style="color:var(--fg-3)">→</span> { <span class="k">"probability"</span>: <span class="n">0.97</span> }</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DONOR -->
+    <section class="view" id="v-donor">
+      <div class="ph"><div style="display:flex;align-items:center;gap:12px"><span class="avb"><img class="av xl" src="https://i.pravatar.cc/120?img=32"><span class="b" style="min-width:20px;height:20px;line-height:20px;font-size:11px">3</span></span><div><h1>Rosa M. Delgado</h1><p style="display:flex;gap:6px;align-items:center;margin-top:4px"><span class="chip warn">Anchor donor</span><span class="chip risk">Lapsing · 82%</span><span class="chip">3 linked records</span><span style="color:var(--fg-3)">· Little Havana</span></p></div></div>
+        <div class="r"><button class="btn">Log activity</button><button class="btn pri"><svg class="i" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Call Rosa</button></div></div>
+      <div class="dn">
+        <div class="card">
+          <div class="rings">
+            <div><div class="ring"><svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" fill="none" stroke="rgba(12,12,14,.07)" stroke-width="5"/><circle cx="32" cy="32" r="27" fill="none" stroke="#D4473A" stroke-width="5" stroke-dasharray="169.6" stroke-dashoffset="30.5" stroke-linecap="round"/></svg><div class="v">0.82</div></div><div class="rl">Lapse risk</div></div>
+            <div><div class="ring"><svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" fill="none" stroke="rgba(12,12,14,.07)" stroke-width="5"/><circle cx="32" cy="32" r="27" fill="none" stroke="#3A57D0" stroke-width="5" stroke-dasharray="169.6" stroke-dashoffset="13.6" stroke-linecap="round"/></svg><div class="v">92</div></div><div class="rl">Loyalty</div></div>
+            <div><div class="ring"><svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" fill="none" stroke="rgba(12,12,14,.07)" stroke-width="5"/><circle cx="32" cy="32" r="27" fill="none" stroke="#0E7C6B" stroke-width="5" stroke-dasharray="169.6" stroke-dashoffset="11" stroke-linecap="round"/></svg><div class="v">14th</div></div><div class="rl">of 214</div></div>
+          </div>
+          <div class="prof">
+            <dl class="kv">
+              <dt>Email</dt><dd>rosa.delgado@gmail.com</dd>
+              <dt>Phone</dt><dd class="mono" style="font-size:12.5px">(305) 555-0142</dd>
+              <dt>Address</dt><dd>1420 SW 8th St<br>Miami, FL 33135</dd>
+              <dt>Owner</dt><dd style="display:flex;align-items:center;gap:6px"><img class="av sm" src="https://i.pravatar.cc/64?img=47">Denise</dd>
+              <dt>Gives to</dt><dd>Mentoring</dd>
+            </dl>
+          </div>
+          <div class="sect"><h4>Lifetime</h4>
+            <div class="lr">Total given<span class="mono" style="color:var(--fg)">$4,150</span></div>
+            <div class="lr">Gifts<span class="mono">7</span></div>
+            <div class="lr">Average gift<span class="mono">$593</span></div>
+            <div class="lr">Rank<span class="mono">14 of 214</span></div>
+          </div>
+          <div class="sect"><h4>Linked records</h4>
+            <div class="lr"><span class="sb"><i style="background:#0E7C6B"></i>GMD</span>Rosa M. Delgado<span class="mono">4 gifts</span></div>
+            <div class="lr"><span class="sb"><i style="background:#3A57D0"></i>CHK</span>R. Delgado<span class="mono">2 gifts</span></div>
+            <div class="lr"><span class="sb"><i style="background:#B4741A"></i>GALA</span>Rosa Delgado<span class="mono">1 gift</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="ch"><h3>Giving pattern</h3><span class="s">One gift every November since 2021, plus a December check since 2024</span><div class="r"><span class="chip risk">Nov 2026 not received</span></div></div>
+            <div class="heat">
+              <div></div><div class="m">J</div><div class="m">F</div><div class="m">M</div><div class="m">A</div><div class="m">M</div><div class="m">J</div><div class="m">J</div><div class="m">A</div><div class="m">S</div><div class="m">O</div><div class="m">N</div><div class="m">D</div>
+              <div class="y">2026</div><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="miss"></i><i class="fut"></i>
+              <div class="y">2025</div><i></i><i></i><i class="l1"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="l2"></i><i class="l3"></i>
+              <div class="y">2024</div><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="l2"></i><i class="l3"></i>
+              <div class="y">2023</div><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="l2"></i><i></i>
+              <div class="y">2022</div><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              <div class="y">2021</div><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="l1"></i><i></i>
+            </div>
+          </div>
+          <div class="dgrid">
+            <div class="card">
+              <div class="ch"><h3>Suggested outreach</h3><span class="s">Phone first, then email</span><div class="r"><span class="chip">gpt-5.5</span></div></div>
+              <div class="note"><p>Hi Rosa,</p><p>Give Miami Day is next Thursday, and I wanted to reach you first. You've been with our mentoring kids every year since 2021, and your December check helped us keep every match going through the spring.</p><p>If you're planning to give again, I'd love to make sure it lands where you want it. And if anything has changed, thank you.</p><p style="margin:0;color:var(--fg-2)">Denise · Tidepath Family Alliance</p></div>
+              <div class="facts"><span class="chip">GMD gifts 2021–2025</span><span class="chip">Designation: Mentoring</span><span class="chip">Check · Dec 2025 · $500</span></div>
+              <div class="check"><svg class="i" viewBox="0 0 24 24" style="color:var(--accent)"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>Decisions check: claims not in her record<span class="mono" style="margin-left:auto">0.02</span></div>
+              <div class="na"><button class="btn">Regenerate</button><button class="btn">Copy</button><button class="btn acc" style="margin-left:auto">Mark called</button></div>
+            </div>
+            <div class="card tl">
+              <div class="ch"><h3>Timeline</h3><span class="s">7 gifts · 3 sources</span></div>
+              <div class="t"><span class="d">Dec 15, 2025</span><span class="b c"></span><span>Check #1042</span><span class="mono">$500</span></div>
+              <div class="t"><span class="d">Nov 20, 2025</span><span class="b"></span><span>GiveMiamiDay.org · Mentoring</span><span class="mono">$250</span></div>
+              <div class="t"><span class="d">Mar 2, 2025</span><span class="b g"></span><span>Gala auction · Bidder 44</span><span class="mono">$150</span></div>
+              <div class="t"><span class="d">Dec 12, 2024</span><span class="b c"></span><span>Check #0961</span><span class="mono">$500</span></div>
+              <div class="t"><span class="d">Nov 21, 2024</span><span class="b"></span><span>GiveMiamiDay.org</span><span class="mono">$250</span></div>
+              <div class="t"><span class="d">Nov 16, 2023</span><span class="b"></span><span>GiveMiamiDay.org</span><span class="mono">$200</span></div>
+              <div class="t"><span class="d">Nov 17, 2021</span><span class="b"></span><span>GiveMiamiDay.org</span><span class="mono">$100</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- IMPORTS -->
+    <section class="view" id="v-imports">
+      <div class="ph"><div><h1>Import run #128</h1><p>Durable pipeline on Cloudflare Workflows · started 2:41 PM · finished in 14.2s</p></div>
+        <div class="r"><button class="btn">Download log</button><button class="btn pri">New import</button></div></div>
+      <div class="runs">
+        <div class="card steps">
+          <div class="ch"><h3>Steps</h3><span class="s">8 of 8 complete · each step retries on its own</span></div>
+          <div class="st"><span class="ck"><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span><div><b>Upload to storage<span class="tech">R2</span></b><span>4 files · 186 KB</span></div><span class="o">4 files</span><span class="t">0.4s</span></div>
+          <div class="st"><span class="ck"><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span><div><b>Parse and normalize<span class="tech">Workers</span></b><span>Names, emails, phones, street suffixes, dates</span></div><span class="o">261 rows</span><span class="t">1.1s</span></div>
+          <div class="st"><span class="ck"><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span><div><b>Exact matches<span class="tech">D1</span></b><span>Same email or phone</span></div><span class="o">40 merged</span><span class="t">0.2s</span></div>
+          <div class="st"><span class="ck"><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span><div><b>Embed names and addresses<span class="tech">Workers AI</span></b><span>One vector per row</span></div><span class="o">221 vectors</span><span class="t">2.3s</span></div>
+          <div class="st"><span class="ck"><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span><div><b>Find candidate pairs<span class="tech">Vectorize</span></b><span>Nearest neighbors above 0.78 similarity</span></div><span class="o">96 pairs</span><span class="t">0.9s</span></div>
+          <div class="st"><span class="ck"><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span><div><b>Judge every pair<span class="tech">OpenAI Decisions</span></b><span>Predicate per pair · 1 request</span></div><span class="o">7 to review</span><span class="t">3.8s</span></div>
+          <div class="st"><span class="ck"><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span><div><b>Score lapse risk<span class="tech">OpenAI Decisions</span></b><span>Score per donor · 214 donors · 3 requests</span></div><span class="o">11 lapsing</span><span class="t">4.6s</span></div>
+          <div class="st"><span class="ck"><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span><div><b>Draft outreach and verify<span class="tech">OpenAI</span></b><span>Draft with gpt-5.5, check with Decisions</span></div><span class="o">11 notes</span><span class="t">0.9s</span></div>
+        </div>
+        <div>
+          <div class="card srcs">
+            <div class="ch"><h3>Sources</h3><div class="r"><button class="btn ghost" style="height:24px">Connect</button></div></div>
+            <div class="s"><div class="lg" style="background:#0E7C6B">GMD</div><div><b>GiveMiamiDay.org</b><span>gmd-export.csv · CSV</span></div><span class="mono">120</span></div>
+            <div class="s"><div class="lg" style="background:#D4473A">TIX</div><div><b>Event tickets</b><span>tickets.csv · CSV</span></div><span class="mono">64</span></div>
+            <div class="s"><div class="lg" style="background:#B4741A">GALA</div><div><b>Gala auction</b><span>gala-2025.xlsx · Excel</span></div><span class="mono">41</span></div>
+            <div class="s"><div class="lg" style="background:#3A57D0">CHK</div><div><b>Paper checks</b><span>check-log.xlsx · typed by hand</span></div><span class="mono">36</span></div>
+          </div>
+          <div class="card" style="margin-top:12px">
+            <div class="ch"><h3>Run cost</h3></div>
+            <div class="sect" style="border-top:0">
+              <div class="lr">Decisions questions<span class="mono">1,248</span></div>
+              <div class="lr">Decisions input tokens<span class="mono">184,320</span></div>
+              <div class="lr">Draft tokens<span class="mono">9,812</span></div>
+              <div class="lr" style="border-top:1px solid var(--line);margin-top:4px;padding-top:9px;font-weight:500">Total<span class="mono" style="color:var(--fg)">$0.031</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="scrim" id="scrim"><div class="modal">
+  <div class="mh"><span class="avb"><img class="av lg" src="https://i.pravatar.cc/80?img=32"><span class="b r" style="min-width:18px;height:18px;line-height:18px">3</span></span><div><h2>Rosa Delgado, three ways</h2><p>Same street written two ways, one shared email, gifts never on the same day.</p></div><div class="gauge"><svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="24" fill="none" stroke="rgba(12,12,14,.07)" stroke-width="5"/><circle cx="28" cy="28" r="24" fill="none" stroke="#0E7C6B" stroke-width="5" stroke-dasharray="150.8" stroke-dashoffset="4.5" stroke-linecap="round"/></svg><div class="v">0.97</div></div></div>
+  <div class="mrec"><span class="sbg" style="background:#0E7C6B">GMD</span><div><b>Rosa M. Delgado</b><span class="d">Nov 20, 2025 · $250</span></div><div class="ct">rosa.delgado@gmail.com<br>1420 SW 8th St, Miami 33135</div><span class="k">keeps name,<br>email, address</span></div>
+  <div class="mrec"><span class="sbg" style="background:#3A57D0">CHK</span><div><b>R. Delgado</b><span class="d">Dec 15, 2025 · $500</span></div><div class="ct">rdelgado@yahoo.com · (305) 555-0142<br>1420 SW 8 Street, Miami FL</div><span class="k">keeps phone</span></div>
+  <div class="mrec"><span class="sbg" style="background:#B4741A">GALA</span><div><b>Rosa Delgado</b><span class="d">Mar 2, 2025 · $150</span></div><div class="ct">rosa.delgado@gmail.com<br>Bidder 44</div><span class="k" style="color:var(--fg-3)">nothing new</span></div>
+  <div class="mev"><span class="chip acc">Street matches · 8th St = 8 Street</span><span class="chip acc">Email shared by 2 rows</span><span class="chip acc">Same ZIP 33135</span><span class="chip">Two emails</span><span class="chip">Gifts never overlap</span></div>
+  <div class="mf"><span class="n">OpenAI Decisions · predicate · 412 ms. Nothing is deleted; undo any time.</span><button class="btn" id="mclose">Keep separate</button><button class="btn acc" id="mmerge"><svg class="i" viewBox="0 0 24 24" style="stroke-width:2.2"><path d="M5 12l5 5 9-10"/></svg>Merge 3 records</button></div>
+</div></div>
+
+<script>
+const S=location.search.includes('static'); if(S)document.documentElement.classList.add('static');
+const calls=[
+ [32,'Rosa M. Delgado','Anchor · 3 linked records','000000000010'.split(''),'Nov 20, 2025',82,'$2,500','Draft ready','acc',1,3],
+ [12,'Theodore Baptiste','Monthly · card declined ×3','111111110222'.split(''),'Jul 28, 2026',90,'$1,800','Text drafted','acc'],
+ [44,'Alvarez Family Fund','Gala table 2024, 2025','001000000000'.split(''),'Mar 2, 2025',71,'$1,500','Draft ready','acc',0,2],
+ [26,'Marguerite Désir','December checks since 2019','000000000002'.split(''),'Dec 9, 2024',77,'$1,000','Draft ready','acc',0,2],
+ [5,'Kenji Watanabe','Monthly · card expired Sep 30','111111111220'.split(''),'Sep 1, 2026',64,'$900','Drafting','info'],
+ [15,'Joshua Carter','2 linked records','001000000010'.split(''),'Nov 21, 2025',58,'$850','Draft ready','acc',0,2],
+ [36,'Ana Castellanos','Event regular','010001000100'.split(''),'Sep 14, 2025',52,'$720','Queued',''],
+ [53,'Jean Pierre-Louis','GMD 2023, 2024, 2025','000000000010'.split(''),'Nov 20, 2025',49,'$600','Queued','']
+];
+document.getElementById('calls').innerHTML=calls.map((c,i)=>`<tr class="fade ${c[9]?'sel':''}" style="animation-delay:${.3+i*.03}s" data-go="${c[9]?'donor':''}"><td><div class="who"><span class="avb"><img class="av" src="https://i.pravatar.cc/64?img=${c[0]}">${c[10]>1?`<span class="b">${c[10]}</span>`:''}</span><div><b>${c[1]}</b><span>${c[2]}</span></div></div></td><td><div class="cad">${c[3].map((d,k)=>`<i class="${k===11?'fut':d==='1'?'on':d==='2'?'miss':''}"></i>`).join('')}</div></td><td class="mono" style="font-size:12px;color:var(--fg-2)">${c[4]}</td><td><div class="rk"><svg class="mring" width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7" fill="none" stroke="rgba(12,12,14,.08)" stroke-width="2.5"/><circle cx="9" cy="9" r="7" fill="none" stroke="${c[5]<60?'#B4741A':'#D4473A'}" stroke-width="2.5" stroke-dasharray="44" stroke-dashoffset="${(44*(1-c[5]/100)).toFixed(1)}" stroke-linecap="round"/></svg><span class="mono">${c[5]}%</span></div></td><td class="r-al mono" style="font-weight:500">${c[6]}</td><td>${c[8]?`<span class="chip ${c[8]}">${c[7]}</span>`:`<span class="chip">${c[7]}</span>`}</td></tr>`).join('');
+const feedItems=[
+ ['p','Same person? <b>Rosa M. Delgado</b> × <b>R. Delgado</b> × <b>Rosa Delgado</b>','predicate · merge','0.97','hi'],
+ ['s','Lapse risk · <b>Theodore Baptiste</b>','score · 4 levels','Urgent','lo'],
+ ['p','Claims not in record? Note to <b>Rosa M. Delgado</b>','predicate · draft check','0.02','hi'],
+ ['p','Same person? <b>Josh Carter</b> × <b>Joshua Carter</b>','predicate · merge','0.93','hi'],
+ ['c','Best channel · <b>Marguerite Désir</b>','choice · phone / email / letter','Letter',''],
+ ['p','Same person? <b>J. Pierre-Louis</b> × <b>Jean Pierre-Louis</b>','predicate · merge','0.42','lo'],
+ ['s','Lapse risk · <b>Kenji Watanabe</b>','score · 4 levels','High','lo'],
+ ['p','Same person? <b>A. Castellanos</b> × <b>Ana Castellanos</b>','predicate · merge','0.71','']
+];
+const ico={p:'<path d="M5 12l5 5 9-10"/>',s:'<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>',c:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>'};
+const feed=document.getElementById('feed'); let ago=[4,9,12,18,26,31,44,52];
+function render(){feed.innerHTML=feedItems.map((f,i)=>`<div class="fi ${i===0&&!S?'new':''}"><div class="ic"><svg class="i" viewBox="0 0 24 24">${ico[f[0]]}</svg></div><div><div class="q">${f[1]}</div><div class="m">${f[2]} · ${ago[i]}s ago</div></div><span class="p ${f[4]}">${f[3]}</span></div>`).join('')}
+render();
+let qc=1248; if(!S)setInterval(()=>{feedItems.unshift(feedItems.pop());ago=ago.map(a=>a+3);ago.unshift(1);ago.pop();qc+=Math.floor(3+Math.random()*9);const t=qc.toLocaleString();document.getElementById('qcount').textContent=t;document.getElementById('qcount2').textContent=t;render()},2600);
+const crumbs={today:'<b>Today</b>',duplicates:'Donors <span>/</span> <b>Duplicates</b>',donor:'Call list <span>/</span> <b>Rosa M. Delgado</b>',imports:'Imports <span>/</span> <b>Run #128</b>'};
+function go(v){if(!document.getElementById('v-'+v))return;document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v));document.getElementById('crumb').innerHTML=crumbs[v];if(v==='today')setTimeout(wire,40);history.replaceState(null,'','#'+v+(S?'':''))}
+document.querySelectorAll('.nav a[data-v]').forEach(a=>a.onclick=()=>go(a.dataset.v));
+document.addEventListener('click',e=>{const t=e.target.closest('[data-go]');if(t&&t.dataset.go)go(t.dataset.go)});
+const q=[[32,32,'Rosa M. Delgado','GMD CHK GALA','0.97','hi',1],[15,15,'Joshua Carter','GMD TIX','0.93','hi'],[44,44,'Alvarez Family Fund','GALA GALA','0.91','hi'],[26,26,'Marguerite Désir','CHK CHK','0.84','md'],[36,36,'Ana Castellanos','GMD TIX','0.71','md'],[53,53,'J. Pierre-Louis','CHK GMD','0.42','lo'],[5,5,'Kenji Watanabe','GMD GMD','0.38','lo']];
+const sc={GMD:'#0E7C6B',CHK:'#3A57D0',GALA:'#B4741A',TIX:'#D4473A'};
+document.getElementById('queue').innerHTML='<div class="ch"><h3>Queue</h3><span class="s">sorted by confidence</span></div>'+q.map(x=>`<div class="it ${x[6]?'on':''}"><span class="avb"><img class="av" src="https://i.pravatar.cc/64?img=${x[0]}"><span class="b ${x[5]==='lo'?'r':''}">${x[3].split(' ').length}</span></span><div><b>${x[2]}</b><div class="src">${x[3].split(' ').map(s=>`<span class="sb"><i style="background:${sc[s]}"></i>${s}</span>`).join('')}</div></div><span class="pr ${x[5]}">${x[4]}</span></div>`).join('');
+
+function wire(){
+  const board=document.getElementById('board'), svg=document.getElementById('wires'); if(!board||!board.offsetParent)return; svg.innerHTML='';
+  const b=board.getBoundingClientRect(); svg.setAttribute('viewBox',`0 0 ${b.width} ${b.height}`); svg.setAttribute('width',b.width); svg.setAttribute('height',b.height);
+  const cols=[...board.querySelectorAll('.col')].map(c=>[...c.querySelectorAll('.fr:not(.more)')]);
+  const pt=(el,side)=>{const r=el.getBoundingClientRect();return [side==='r'?r.right-b.left:r.left-b.left, r.top-b.top+r.height/2]};
+  const links=[[0,0,1,0,'c'],[0,1,1,0,'c'],[0,2,1,0,'c'],[0,3,1,1,'t'],[0,4,1,2,'p'],[0,5,1,2,'p'],[1,0,2,0,'c'],[1,1,2,1,'c'],[1,2,2,2,'t']];
+  links.forEach(([c1,i1,c2,i2,k],n)=>{const a=pt(cols[c1][i1],'r'),z=pt(cols[c2][i2],'l');const mx=(a[0]+z[0])/2;
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('d',`M${a[0]} ${a[1]} C ${mx} ${a[1]}, ${mx} ${z[1]}, ${z[0]} ${z[1]}`);p.setAttribute('class',k);svg.appendChild(p);
+    if(k!=='p'&&!S){const L=p.getTotalLength();p.style.strokeDasharray=L;p.style.strokeDashoffset=L;p.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:900,delay:500+n*110,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'})}
+    [a,z].forEach(q=>{const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',q[0]);c.setAttribute('cy',q[1]);c.setAttribute('r',3);c.setAttribute('class',k);svg.appendChild(c)});
+  });
+}
+addEventListener('resize',wire);
+const app=document.getElementById('app'), scrim=document.getElementById('scrim');
+function openModal(){app.classList.add('blur');scrim.classList.add('on')}
+function closeModal(){app.classList.remove('blur');scrim.classList.remove('on')}
+document.getElementById('mclose').onclick=closeModal; document.getElementById('mmerge').onclick=closeModal;
+scrim.addEventListener('click',e=>{if(e.target===scrim)closeModal()});
+addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+document.addEventListener('click',e=>{if(e.target.closest('[data-modal]'))openModal()});
+if(!S)document.querySelectorAll('.pn .v[data-count]').forEach(el=>{const to=+el.dataset.count,t0=performance.now(),d=1100;const f=t=>{const p=Math.min(1,(t-t0)/d),q=1-Math.pow(1-p,3);el.textContent=Math.round(to*q).toLocaleString();if(p<1)requestAnimationFrame(f)};requestAnimationFrame(f)});
+
+const H=location.hash.slice(1); go(H==='review'?'today':(H||'today')); setTimeout(wire,60); if(H==='review')openModal();
+</script>
+</body></html>
