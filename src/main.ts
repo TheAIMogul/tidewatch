@@ -74,7 +74,7 @@ function chrome() {
   document.querySelectorAll<HTMLElement>("#nav a[data-v]").forEach((a) => a.classList.toggle("on", a.dataset.v === navV || (navV === "today" && a.dataset.v === "today" && !location.hash.includes("calls"))));
 }
 
-const CRUMB: Record<string, string> = { today: "<b>Today</b>", donors: "<b>Donors</b>", duplicates: "Donors <span>/</span> <b>Duplicates</b>", imports: "<b>Imports</b>", settings: "<b>Settings</b>" };
+const CRUMB: Record<string, string> = { story: "<b>The story</b>", today: "<b>Today</b>", donors: "<b>Donors</b>", duplicates: "Donors <span>/</span> <b>Duplicates</b>", imports: "<b>Imports</b>", settings: "<b>Settings</b>" };
 
 async function render() {
   chrome();
@@ -82,6 +82,7 @@ async function render() {
   $("#crumb").innerHTML = CRUMB[route.v] ?? "<b>Today</b>";
   try {
     if (!S) { v.innerHTML = `<div class="card" style="padding:20px"><div class="skel" style="width:40%"></div></div>`; return; }
+    if (route.v === "story") return await renderStory(v);
     if (route.v === "imports") return renderImports(v);
     if (!S.run) return renderEmpty(v);
     if (route.v === "duplicates") return await renderDuplicates(v);
@@ -430,6 +431,76 @@ function renderSettings(v: HTMLElement) {
   v.innerHTML = `<div class="ph"><div><h1>Settings</h1><p>Workspace for ${esc(S!.org)}.</p></div></div>
     <div class="card" style="max-width:560px"><div class="ch"><h3>Demo data</h3></div><div style="padding:14px 16px;display:flex;align-items:center;gap:12px"><div style="flex:1;color:var(--fg-2)">Wipe every donor, merge, note and Decisions log entry, and start from an empty workspace.</div><button class="btn" id="reset" style="color:var(--risk)">Reset demo data</button></div></div>`;
   $("#reset").addEventListener("click", async () => { if (!confirm("Erase all imported data and start over?")) return; await post("/reset"); sig = ""; location.hash = "today"; location.reload(); });
+}
+
+// ---------- story (for the big screen) ----------
+async function renderStory(v: HTMLElement) {
+  const s = S!.summary, has = !!S!.run && s.donors > 0;
+  const days = Math.round((Date.parse(S!.gmdDate) - Date.parse(S!.today)) / 864e5);
+  // Rosa's real record when the sample data is loaded; the story still reads without it.
+  let rosa: T.DonorRow | undefined, prob = 0.98, note = "";
+  if (has) {
+    try {
+      rosa = (await api<T.DonorsResp>("/donors?q=Rosa")).items.find((d) => /delgado/i.test(d.name));
+      const c = (await api<T.CandsResp>("/candidates?status=pending")).items.find((x) => /delgado/i.test(x.name)); if (c?.probability) prob = c.probability;
+      if (rosa) { const d = await api<T.DonorDetail>(`/donors/${rosa.id}`); note = d.outreach?.draft ?? ""; }
+    } catch { /* fall back to the written story */ }
+  }
+  const sentences = (note.replace(/^Hi [^,\n]+,\s*/, "").split(/\n\s*\n/)[0] ?? "").split(/(?<=[.?])\s+/).slice(0, 1).join(" ");
+  const excerpt = sentences || "Give Miami Day is next Thursday, and you've been with our mentoring kids every year since 2021.";
+  const rosaAv = avatar(rosa?.avatar ?? "", "Rosa Delgado", 56, 3, false);
+  const dot = (y: string, k: "on" | "off" | "miss") => `<div class="sy"><i class="${k}"></i><span>${y}</span></div>`;
+  const arrow = `<div class="st-arr">${svgI('<path d="M9 6l6 6-6 6"/>')}</div>`;
+  const dur = S!.run?.finished_at ? Math.round((Date.parse(S!.run.finished_at) - Date.parse(S!.run.started_at)) / 1000) : 20;
+  v.innerHTML = `<div class="story">
+    <div class="st-hero fade">
+      <div class="st-kicker"><span class="chip">A story from Tidepath Family Alliance</span><span>Fictional people, real problem</span></div>
+      <h1>Rosa has given every Give Miami Day since 2021.<br><em>This year, nobody would have noticed if she stopped.</em></h1>
+      <p>Denise raises the money for a small Miami nonprofit that helps kids and families. Her donors live in four separate lists. Give Miami Day is in <b>${days} days</b>.</p>
+    </div>
+    <div class="st-row">
+      <div class="card st-ch fade" style="animation-delay:.15s">
+        <div class="st-n">1</div><h3>Rosa is on three lists, spelled three ways</h3>
+        <div class="st-viz st-recs">
+          <div class="fr"><span class="sbg" style="background:${COLORS.GMD}">GMD</span><b>Rosa M. Delgado</b><span class="m">$250</span></div>
+          <div class="fr"><span class="sbg" style="background:${COLORS.GALA}">GALA</span><b>Rosa Delgado</b><span class="m">$150</span></div>
+          <div class="fr"><span class="sbg" style="background:${COLORS.CHK}">CHK</span><b>R. Delgado</b><span class="m">$500</span></div>
+        </div>
+        <p>Online gifts, gala bids and hand-typed checks never meet. Rosa got three year-end letters, and her giving looks like three small donors.</p>
+      </div>${arrow}
+      <div class="card st-ch fade" style="animation-delay:.35s">
+        <div class="st-n">2</div><h3>Tidewatch sees one person</h3>
+        <div class="st-viz st-one">${rosaAv}<div><b>Rosa M. Delgado</b><span>3 records · 7 gifts · $1,950</span></div>${gauge(prob, 44)}</div>
+        <div class="st-chips"><span class="chip acc">Same street, written two ways</span><span class="chip acc">Same email</span><span class="chip acc">Same ZIP</span></div>
+        <p>It reads every list and asks OpenAI Decisions whether these records are the same donor. Denise approves with one click. Nothing is deleted.</p>
+      </div>${arrow}
+      <div class="card st-ch fade" style="animation-delay:.55s">
+        <div class="st-n">3</div><h3>It notices the silence</h3>
+        <div class="st-viz st-years">${dot("2021", "on")}${dot("2022", "off")}${dot("2023", "on")}${dot("2024", "on")}${dot("2025", "on")}${dot("2026", "miss")}</div>
+        <div class="st-risk"><span class="mono">$900</span> a year at risk · Give Miami Day, Nov 19</div>
+        <p>Rosa gives every November. Nothing has arrived this year. Tidewatch spots the gap before it becomes a lost donor.</p>
+      </div>${arrow}
+      <div class="card st-ch fade" style="animation-delay:.75s">
+        <div class="st-n">4</div><h3>Denise makes the call</h3>
+        <div class="st-viz st-note"><div class="st-sheet">“Hi Rosa, ${esc(excerpt)}”</div>
+          <div class="st-check">${svgI('<path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/>')}Written from her record. Fact-checked.</div></div>
+        <p>The note uses only Rosa's real history, and OpenAI Decisions checks it never invents a fact. One call keeps her giving.</p>
+      </div>
+    </div>
+    <div class="card st-band fade" style="animation-delay:.95s">
+      ${has ? `<div class="st-lab">Across Tidepath's whole list, in ${dur} seconds</div>
+      <div class="st-stats">
+        <div><b class="num">${s.rows}</b><span>rows from ${s.sources} lists</span></div><i>→</i>
+        <div><b class="num">${s.donors}</b><span>real people</span></div><i>→</i>
+        <div><b class="num">${s.needReview}</b><span>duplicates for Denise to approve</span></div><i>→</i>
+        <div><b class="num">${s.lapsing}</b><span>regular donors gone quiet</span></div><i>→</i>
+        <div class="hot"><b class="num">${money(s.atRisk)}</b><span>to save before Give Miami Day</span></div>
+      </div>
+      <div class="st-go"><a class="btn" href="#imports">Watch it run</a><a class="btn pri" href="#today">See today's call list</a></div>`
+      : `<div class="st-lab">See it on real lists</div><div class="st-go" style="margin-top:0">${importBody("dropS")}</div>`}
+    </div>
+  </div>`;
+  if (!has) bindImport(v, "dropS");
 }
 
 // ---------- boot ----------
