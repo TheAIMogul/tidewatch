@@ -8,6 +8,7 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
   },
+  "routes": [{ "pattern": "tidewatch.micahberkley.com", "custom_domain": true }],
   "observability": { "enabled": true },
   "upload_source_maps": true,
   // Donors, source records, gifts, merge candidates, the Decisions log.

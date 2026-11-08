@@ -6,7 +6,7 @@ Drop in every donor list you have. Tidewatch resolves every human to one record,
 
 Built for the [Give Miami Day](https://www.givemiamiday.org) community hackathon by The Miami Foundation, challenge 2: *duplicate donor records, and donors who quietly stop giving.*
 
-> **Live: https://tidewatch.micahberkley.workers.dev** · Import, entity resolution, lapse scoring, drafting, merge review and the call list all run end to end on Cloudflare against real OpenAI Decisions and gpt-5.5 calls. A full sample import takes about 20 seconds. All data in `public/samples/` is fictional.
+> **Live: https://tidewatch.micahberkley.com** · Import, entity resolution, lapse scoring, drafting, merge review and the call list all run end to end on Cloudflare against real OpenAI Decisions and gpt-5.5 calls. A full sample import takes about 20 seconds. All data in `public/samples/` is fictional.
 
 ![Today](docs/screens/live/today.png)
 
