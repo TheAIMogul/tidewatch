@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Tidewatch · Review</title><link rel="stylesheet" href="mock.css">
+<style>
+.layout { display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start; }
+.queue .item { padding: 12px 14px; border-top: 1px solid var(--rule); display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; cursor: pointer; }
+.queue .item:first-of-type { border-top: 0; }
+.queue .item.sel { background: var(--seaglass-wash); border-radius: 8px; border-top-color: transparent; }
+.queue .item.sel + .item { border-top-color: transparent; }
+.queue b { font-weight: 600; display: block; }
+.queue small { color: var(--ink-3); font-size: 12px; }
+.prob { font-family: var(--mono); font-size: 13px; color: var(--ink-2); }
+.prob.hi { color: var(--seaglass); }
+.prob.lo { color: var(--coral); }
+.group { padding: 22px 24px; }
+.ghead { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+.ghead h2 { font-size: 22px; }
+.ghead p { margin: 4px 0 0; color: var(--ink-2); }
+.ring { width: 92px; height: 92px; position: relative; }
+.ring svg { transform: rotate(-90deg); }
+.ring .v { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--mono); font-size: 20px; }
+.ring .v small { display: block; font-family: var(--sans); font-size: 10px; color: var(--ink-3); text-align: center; letter-spacing: .06em; text-transform: uppercase; }
+.recs { display: grid; grid-template-columns: 150px repeat(3, 1fr); border-top: 1px solid var(--rule); margin-top: 6px; }
+.recs > div { padding: 10px 12px; border-bottom: 1px solid var(--rule); font-size: 13px; }
+.recs .k { color: var(--ink-3); font-size: 12px; }
+.recs .src { font-weight: 600; font-size: 13px; }
+.recs .src small { display: block; color: var(--ink-3); font-weight: 400; font-size: 11px; font-family: var(--mono); }
+.recs .pick { position: relative; }
+.recs .pick.win { background: var(--seaglass-wash); border-radius: 6px; box-shadow: inset 2px 0 0 var(--seaglass); color: var(--seaglass); font-weight: 500; }
+.ring .lbl { text-align: center; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); margin-top: 6px; }
+.recs .same { color: var(--ink-3); font-style: italic; }
+.reasons { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 6px; }
+.reasons .pill { font-weight: 400; }
+.foot { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--rule); }
+.foot .note { font-size: 12px; color: var(--ink-3); max-width: 480px; }
+.gifts { display: flex; gap: 6px; flex-wrap: wrap; }
+.gifts span { font-family: var(--mono); font-size: 12px; background: var(--foam-3); padding: 2px 7px; border-radius: 4px; }
+</style></head>
+<body><div class="shell">
+<aside class="rail">
+  <div class="brand"><div class="mark"></div><div><b>Tidewatch</b><small>Tidepath Family Alliance</small></div></div>
+  <nav class="nav">
+    <a><svg viewBox="0 0 24 24"><path d="M3 15c3-3 6-3 9 0s6 3 9 0M3 9c3-3 6-3 9 0s6 3 9 0"/></svg>Tide</a>
+    <a class="active"><svg viewBox="0 0 24 24"><path d="M8 7h8M8 12h8M8 17h5"/><circle cx="4" cy="7" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="17" r="1"/></svg>Review<span class="cnt">7</span></a>
+    <a><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Donors<span class="cnt">214</span></a>
+    <a><svg viewBox="0 0 24 24"><path d="M12 3v12M6 9l6 6 6-6"/><path d="M4 21h16"/></svg>Imports<span class="cnt">4</span></a>
+  </nav>
+  <div class="railfoot"><b>Give Miami Day</b>Thu Nov 19 · 11 days</div>
+</aside>
+<main class="main">
+  <div class="topbar"><div><h1>Review merges</h1><div class="sub">261 raw records became 214 donors. 40 merged on exact email or phone. 7 need your eyes.</div></div>
+    <div class="actions"><button class="btn ghost">Approve all above 0.95</button><button class="btn">Undo last</button></div></div>
+
+  <div class="layout">
+    <section class="card queue" style="padding:6px">
+      <div class="item sel"><div><b>Rosa Delgado</b><small>3 records · GMD, checks, gala</small></div><span class="prob hi">0.97</span></div>
+      <div class="item"><div><b>Joshua / Josh Carter</b><small>2 records · GMD, tickets</small></div><span class="prob hi">0.93</span></div>
+      <div class="item"><div><b>Alvarez Family Fund</b><small>2 records · gala 2024, 2025</small></div><span class="prob hi">0.91</span></div>
+      <div class="item"><div><b>M. Désir / Marguerite Desir</b><small>2 records · checks</small></div><span class="prob">0.84</span></div>
+      <div class="item"><div><b>Ana Castellanos</b><small>2 records · same street, two emails</small></div><span class="prob">0.71</span></div>
+      <div class="item"><div><b>J. Pierre-Louis</b><small>2 records · common surname</small></div><span class="prob lo">0.42</span></div>
+      <div class="item"><div><b>Kenji Watanabe</b><small>2 records · one is a company card</small></div><span class="prob lo">0.38</span></div>
+    </section>
+
+    <section class="card group">
+      <div class="ghead">
+        <div><h2>Rosa Delgado, three ways</h2><p>Three source rows, two emails, one street address written two ways. The gifts never overlap in time.</p></div>
+        <div class="ring"><svg width="92" height="92" viewBox="0 0 92 92"><circle cx="46" cy="46" r="40" fill="none" stroke="var(--foam-3)" stroke-width="6"/><circle cx="46" cy="46" r="40" fill="none" stroke="#2E8B7A" stroke-width="6" stroke-dasharray="251" stroke-dashoffset="7.5" stroke-linecap="round"/></svg><div class="v">0.97</div><div class="lbl">same person</div></div>
+      </div>
+
+      <div class="recs">
+        <div class="k"></div>
+        <div class="src">GiveMiamiDay.org<small>row 118 · Nov 20, 2025</small></div>
+        <div class="src">Checks<small>row 9 · Dec 15, 2025</small></div>
+        <div class="src">Gala auction<small>bidder 44 · Mar 2, 2025</small></div>
+
+        <div class="k">Name</div><div class="pick win">Rosa M. Delgado</div><div class="pick">R. Delgado</div><div class="pick">Rosa Delgado</div>
+        <div class="k">Email</div><div class="pick win">rosa.delgado@gmail.com</div><div class="pick">rdelgado@yahoo.com</div><div class="pick same">same as GMD</div>
+        <div class="k">Phone</div><div class="pick same">—</div><div class="pick win">(305) 555-0142</div><div class="pick same">—</div>
+        <div class="k">Address</div><div class="pick win">1420 SW 8th St, Miami 33135</div><div class="pick">1420 SW 8 Street, Miami FL</div><div class="pick same">—</div>
+        <div class="k">Gifts</div><div><div class="gifts"><span>$250 · Nov '25</span><span>$250 · Nov '24</span><span>$200 · Nov '23</span></div></div><div><div class="gifts"><span>$500 · Dec '25</span><span>$500 · Dec '24</span></div></div><div><div class="gifts"><span>$150 · Mar '25</span></div></div>
+      </div>
+
+      <div class="reasons">
+        <span class="pill sea">Street address matches (8th St = 8 Street)</span>
+        <span class="pill sea">Email shared by two rows</span>
+        <span class="pill sea">Same ZIP · 33135</span>
+        <span class="pill">Two different emails</span>
+        <span class="pill">Gifts never on the same day</span>
+      </div>
+      <div class="muted" style="font-size:12px">Reasons are computed. The probability is OpenAI Decisions reading the three rows side by side. Green cells are the values that keep. Click any cell to change that.</div>
+
+      <div class="foot">
+        <div class="note">Approving links the three rows under one donor. Nothing is deleted; every row keeps its source, and you can undo from the log.</div>
+        <div style="display:flex;gap:8px"><button class="btn">Keep separate</button><button class="btn accent">Merge into Rosa M. Delgado</button></div>
+      </div>
+    </section>
+  </div>
+</main></div></body></html>

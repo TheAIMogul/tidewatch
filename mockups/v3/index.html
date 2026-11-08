@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tidewatch · Stage</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#141821; --ink-2:#4A5160; --ink-3:#8B92A1;
+  --glass:rgba(255,255,255,.62); --glass-2:rgba(255,255,255,.86); --line:rgba(255,255,255,.8);
+  --shadow:0 24px 60px rgba(28,36,58,.12),0 2px 6px rgba(28,36,58,.05);
+  --teal:#2AA58F; --teal-soft:#D9F1EB; --coral:#F06A5A; --coral-soft:#FBE0DB; --blue:#5B7CFF; --blue-soft:#E1E7FF; --sun:#F5B544; --sun-soft:#FDEFD3;
+  --sans:'Plus Jakarta Sans',system-ui,sans-serif; --mono:'DM Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#E9EDF5;font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+#cv{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:center;overflow:hidden;background:linear-gradient(160deg,#EEF1F7,#E6EAF3 50%,#EFE9EC)}
+.blob{position:absolute;border-radius:50%;filter:blur(110px);opacity:.6;animation:drift 20s ease-in-out infinite alternate}
+.b1{width:900px;height:900px;left:-240px;top:-300px;background:#BFD9FF}
+.b2{width:760px;height:760px;right:-200px;top:18%;background:#CDEFE6;animation-delay:-7s}
+.b3{width:640px;height:640px;left:34%;bottom:-340px;background:#FFD9D0;animation-delay:-12s}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(80px,50px) scale(1.1)}}
+.g{background:var(--glass);backdrop-filter:blur(30px) saturate(1.3);-webkit-backdrop-filter:blur(30px) saturate(1.3);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:36px}
+.abs{position:absolute}
+h1,h2,h3,p{margin:0}
+.btn{font:700 26px var(--sans);padding:22px 40px;border-radius:999px;border:0;cursor:pointer;background:var(--glass-2);color:var(--ink);box-shadow:0 2px 6px rgba(28,36,58,.08);transition:transform .2s,box-shadow .2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(28,36,58,.16)}
+.btn.dark{background:#141821;color:#fff} .btn.teal{background:var(--teal);color:#fff}
+.tag{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:999px;font-weight:700;font-size:21px;background:var(--glass-2)}
+.tag.coral{background:var(--coral-soft);color:#C2493B} .tag.teal{background:var(--teal-soft);color:#1E7F6E} .tag.blue{background:var(--blue-soft);color:#3E5BD6} .tag.sun{background:var(--sun-soft);color:#A8711A}
+.face{border-radius:50%;object-fit:cover;box-shadow:0 0 0 4px #fff;display:block}
+.fw{position:relative;flex:none}
+.bdg{position:absolute;right:-8px;bottom:-8px;min-width:34px;height:34px;border-radius:999px;background:var(--blue);color:#fff;font:700 18px var(--sans);display:grid;place-items:center;padding:0 9px;box-shadow:0 0 0 4px #fff}
+.bdg.teal{background:var(--teal)} .bdg.coral{background:var(--coral)}
+
+/* chrome */
+.brand{left:56px;top:34px;height:72px;display:flex;align-items:center;gap:14px;padding:0 30px 0 18px;border-radius:999px}
+.mark{width:42px;height:42px;border-radius:14px;background:#141821;position:relative;overflow:hidden}
+.mark::after{content:'';position:absolute;left:-6px;right:-6px;bottom:8px;height:16px;background:var(--teal);border-radius:50% 50% 0 0/100% 100% 0 0}
+.brand b{font-size:28px;font-weight:800;letter-spacing:-.02em}
+.stepper{left:50%;top:34px;transform:translateX(-50%);height:72px;display:flex;align-items:center;gap:6px;padding:0 10px;border-radius:999px}
+.st{display:flex;align-items:center;gap:12px;padding:12px 20px;border-radius:999px;font-weight:700;font-size:22px;color:var(--ink-3);transition:all .5s cubic-bezier(.2,.8,.2,1);white-space:nowrap}
+.st i{font-style:normal;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(20,24,33,.08);font:700 18px var(--sans);transition:all .5s}
+.st.done{color:var(--teal)} .st.done i{background:var(--teal);color:#fff}
+.st.on{background:#141821;color:#fff} .st.on i{background:#fff;color:#141821}
+.gmd{right:56px;top:34px;height:72px;display:flex;align-items:center;padding:0 24px;border-radius:999px;font-weight:700;font-size:21px;gap:10px}
+.gmd b{color:#C2493B}
+.capbar{left:50%;bottom:44px;transform:translateX(-50%);width:1280px;padding:26px 44px;border-radius:999px;text-align:center}
+.capbar .cap{font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.15;transition:opacity .35s}
+.capbar .sub{font-size:23px;color:var(--ink-2);margin-top:6px;font-weight:500;transition:opacity .35s}
+.nav{bottom:62px;width:92px;height:92px;border-radius:50%;display:grid;place-items:center;cursor:pointer;font-size:34px;font-weight:700}
+.nav.l{left:56px} .nav.r{right:56px;background:#141821;color:#fff}
+.dots{left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:10px}
+.dots i{width:10px;height:10px;border-radius:50%;background:rgba(20,24,33,.18);transition:all .3s}
+.dots i.on{background:#141821;width:30px;border-radius:999px}
+
+/* beats */
+.beat{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .45s}
+.beat.on{opacity:1;pointer-events:auto}
+.a{opacity:0;transform:translateY(26px) scale(.97);transition:opacity .75s cubic-bezier(.2,.8,.2,1),transform .75s cubic-bezier(.2,.8,.2,1);transition-delay:calc(var(--d,0) * 1s)}
+.beat.on .a{opacity:1;transform:none}
+.beat:not(.on) .a{transition-delay:0s}
+.static *{transition:none!important;animation:none!important}
+
+/* beat 0 */
+.h0{left:0;right:0;top:168px;text-align:center;font-size:104px;font-weight:800;letter-spacing:-.04em;line-height:1.02}
+.h0 em{font-style:normal;color:var(--coral)}
+.tiles{left:118px;top:470px;display:flex;gap:28px}
+.tile{width:400px;height:236px;padding:28px 30px;display:flex;flex-direction:column;border-radius:36px}
+.tile .top{display:flex;align-items:center;gap:16px}
+.tile .src{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;color:#fff;font:800 15px var(--sans);flex:none}
+.tile b{font-size:28px;font-weight:800;line-height:1.1}
+.tile .s{font-size:21px;color:var(--ink-2);margin-top:14px;font-weight:500}
+.tile .ft{margin-top:auto;display:flex;justify-content:space-between;align-items:center}
+.tile .file{font:500 19px var(--mono);background:rgba(20,24,33,.06);padding:6px 12px;border-radius:12px;color:var(--ink-2)}
+.tile .rows{font:500 24px var(--mono)}
+.go{left:50%;top:752px;transform:translateX(-50%)}
+.beat.on .go.a{transform:translateX(-50%)}
+
+/* beat 1 */
+.big1{left:100px;top:200px}
+.big1 .n{font-size:300px;font-weight:800;letter-spacing:-.06em;line-height:.9}
+.big1 .l{font-size:42px;font-weight:700;margin-top:6px}
+.big1 .leg{margin-top:34px;display:flex;flex-direction:column;gap:14px;font-size:26px;font-weight:600;color:var(--ink-2)}
+.big1 .leg div{display:flex;align-items:center;gap:14px}
+.big1 .leg i{width:22px;height:22px;border-radius:50%;display:block}
+.field{left:700px;top:160px;width:1160px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.chip{height:72px;border-radius:999px;background:var(--glass-2);display:flex;align-items:center;gap:12px;padding:0 22px 0 14px;font-weight:700;font-size:23px;box-shadow:0 2px 6px rgba(28,36,58,.06)}
+.chip i{width:20px;height:20px;border-radius:50%;flex:none}
+.chip .m{margin-left:auto;font:500 21px var(--mono);color:var(--ink-2)}
+.chip.hl{background:#fff;box-shadow:0 0 0 4px var(--coral),0 14px 30px rgba(240,106,90,.28)}
+
+/* beat 2 */
+.cnt{left:90px;top:150px}
+.cnt .from{font-size:84px;font-weight:800;color:var(--ink-3);text-decoration:line-through;text-decoration-thickness:8px;text-decoration-color:var(--coral);line-height:1;letter-spacing:-.04em}
+.cnt .to{font-size:190px;font-weight:800;color:var(--teal);line-height:.95;letter-spacing:-.06em;margin-top:6px}
+.cnt .l{font-size:36px;font-weight:700;margin-top:4px}
+.cnt .d{margin-top:14px;font-size:23px;color:var(--ink-2);line-height:1.5;font-weight:500;max-width:480px}
+.cnt .d b{color:var(--ink)}
+.mstage{left:640px;top:160px;width:620px;height:600px}
+.mc{position:absolute;left:0;height:76px;width:330px;border-radius:999px;background:var(--glass-2);display:flex;align-items:center;gap:14px;padding:0 24px 0 16px;font-weight:700;font-size:25px;box-shadow:var(--shadow);transition:transform 1s cubic-bezier(.6,0,.2,1) .9s,opacity .5s ease 1.6s}
+.mc i{width:24px;height:24px;border-radius:50%;flex:none}
+.mc .m{margin-left:auto;font:500 22px var(--mono);color:var(--ink-2)}
+.mc.c1{top:70px} .mc.c2{top:260px} .mc.c3{top:450px}
+.beat.on .mc{opacity:0}
+.beat.on .mc.c1{transform:translate(330px,105px) scale(.5)} .beat.on .mc.c2{transform:translate(330px,-85px) scale(.5)} .beat.on .mc.c3{transform:translate(330px,-275px) scale(.5)}
+.mcard{position:absolute;left:150px;top:0;width:470px;height:600px;padding:34px 34px;border-radius:44px;display:flex;flex-direction:column;align-items:center;text-align:center;transition-delay:1.7s}
+.mcard h2{font-size:48px;font-weight:800;letter-spacing:-.03em;margin-top:22px}
+.mcard .why{display:flex;flex-direction:column;gap:10px;margin-top:20px;align-items:center}
+.mcard .ok{margin-top:auto}
+.also{left:1330px;top:160px;width:520px}
+.also h3{font-size:27px;font-weight:700;color:var(--ink-2);margin-bottom:16px}
+.also .p{display:flex;align-items:center;gap:18px;padding:12px 24px 12px 14px;border-radius:999px;background:var(--glass-2);margin-bottom:16px;box-shadow:0 2px 6px rgba(28,36,58,.06)}
+.also .p b{font-size:25px;display:block;font-weight:800} .also .p span{font-size:20px;color:var(--ink-2);font-weight:500}
+.also .p .pc{margin-left:auto;font:500 24px var(--mono);color:var(--teal)}
+.note2{left:1330px;top:520px;width:520px;font-size:25px;font-weight:600;color:var(--ink-2);line-height:1.45}
+
+/* ask */
+.ask{left:56px;top:700px;width:720px;padding:20px 30px 22px;border-radius:32px}
+.ask .k{font-size:19px;font-weight:700;color:var(--ink-3);letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.ask .k i{width:10px;height:10px;border-radius:50%;background:var(--teal);display:block}
+.ask .q{font-size:25px;font-weight:700;margin-top:8px;line-height:1.25}
+.ask .bar{height:16px;border-radius:999px;background:rgba(20,24,33,.08);margin-top:14px;overflow:hidden}
+.ask .bar i{display:block;height:100%;border-radius:999px;transition:width 1.4s cubic-bezier(.2,.8,.2,1) 1.3s;width:0}
+.beat.on .ask .bar i{width:var(--w)}
+.ask .r{display:flex;justify-content:space-between;margin-top:10px;font-size:22px;font-weight:600;color:var(--ink-2)}
+.ask .r b{font:500 30px var(--mono);color:var(--ink)}
+
+/* beat 3 */
+.slip{left:90px;top:136px}
+.slip .n{font-size:160px;font-weight:800;letter-spacing:-.05em;color:var(--coral);line-height:.95}
+.slipt{left:780px;top:150px;width:1040px}
+.slipt .h{font-size:60px;font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.slipt .s{font-size:30px;color:var(--ink-2);margin-top:14px;font-weight:500;line-height:1.4}
+.slipt .s b{color:var(--ink)}
+.tidep{left:80px;top:336px;width:1760px;height:340px;overflow:hidden;padding:0}
+.lane1{position:absolute;left:36px;top:16px;right:36px}
+.lane1 .lab,.lane2 .lab{font-size:23px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:12px}
+.lane1 .lab span{color:var(--ink-2)}
+.faces{display:flex;gap:10px}
+.faces .face{width:62px;height:62px;box-shadow:0 0 0 4px #fff,0 0 0 8px var(--teal-soft)}
+.wave{position:absolute;left:0;right:0;top:126px;height:60px}
+.under{position:absolute;left:0;right:0;top:160px;bottom:0;background:linear-gradient(180deg,rgba(240,106,90,.12),rgba(240,106,90,.2))}
+.lane2{position:absolute;left:36px;top:172px;right:36px}
+.lane2 .lab{color:#C2493B}
+.slc{display:flex;gap:16px}
+.sc{flex:1;display:flex;align-items:center;gap:16px;padding:14px 20px 14px 14px;border-radius:999px;background:var(--glass-2);box-shadow:0 8px 24px rgba(240,106,90,.2)}
+.sc .face{width:68px;height:68px;box-shadow:0 0 0 4px #fff,0 0 0 8px var(--coral-soft)}
+.sc b{font-size:24px;font-weight:800;display:block;line-height:1.15} .sc span{font:500 21px var(--mono);color:#C2493B}
+.sc.more{flex:.55;justify-content:center;font-size:30px;font-weight:800;color:var(--ink-2)}
+
+/* beat 4 */
+.prof{left:80px;top:136px;width:700px;height:540px;padding:26px 40px;display:flex;flex-direction:column;align-items:center;text-align:center;border-radius:44px}
+.prof .face{width:150px;height:150px;box-shadow:0 0 0 6px #fff,0 0 0 12px var(--coral-soft)}
+.prof h2{font-size:48px;font-weight:800;letter-spacing:-.03em;margin-top:18px}
+.prof .p{font-size:24px;color:var(--ink-2);margin-top:8px;font-weight:500;line-height:1.35}
+.prof .row{display:flex;gap:30px;margin-top:16px;align-items:center}
+.ring{position:relative;width:112px;height:112px}
+.ring svg{transform:rotate(-90deg);width:100%;height:100%} .ring .v{position:absolute;inset:0;display:grid;place-items:center;font:500 29px var(--mono)}
+.prof .row .t{text-align:left;font-size:25px;font-weight:700;line-height:1.3;max-width:300px}
+.prof .row .t span{display:block;font-weight:500;color:var(--ink-2);font-size:22px}
+.noteP{left:830px;top:136px;width:1010px;height:736px;padding:34px 44px 34px;border-radius:44px}
+.noteP h3{font-size:38px;font-weight:800;letter-spacing:-.02em;display:flex;justify-content:space-between;align-items:center}
+.sheet{background:#fff;border-radius:28px;padding:26px 32px;font-size:27px;line-height:1.5;margin-top:18px;box-shadow:inset 0 0 0 1px rgba(20,24,33,.05)}
+.sheet p{margin:0 0 10px}
+.facts{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.facts span{font:500 20px var(--mono);background:var(--glass-2);padding:6px 14px;border-radius:999px;color:var(--ink-2)}
+.actions{display:flex;gap:16px;margin-top:20px}
+.actions .btn{padding:20px 36px}
+</style></head>
+<body>
+<div id="cv">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+
+  <!-- chrome -->
+  <div class="g abs brand"><div class="mark"></div><b>Tidewatch</b></div>
+  <div class="g abs stepper" id="stepper">
+    <div class="st" data-s="1"><i>1</i>Drop your lists</div>
+    <div class="st" data-s="2"><i>2</i>Find the people</div>
+    <div class="st" data-s="3"><i>3</i>See who's slipping</div>
+    <div class="st" data-s="4"><i>4</i>Make the call</div>
+  </div>
+  <div class="g abs gmd">Give Miami Day in <b class="num">11 days</b></div>
+
+  <!-- BEAT 0 -->
+  <section class="beat" id="b0">
+    <h1 class="abs h0 a" style="--d:.1">Drop in your donor lists.<br><em>We find who's about to slip away.</em></h1>
+    <div class="abs tiles">
+      <div class="g tile a" style="--d:.35"><div class="top"><div class="src" style="background:#2AA58F">GMD</div><b>GiveMiamiDay.org</b></div><div class="s">Online donations</div><div class="ft"><span class="file">gmd-export.csv</span><span class="rows">120 rows</span></div></div>
+      <div class="g tile a" style="--d:.45"><div class="top"><div class="src" style="background:#F06A5A">TIX</div><b>Event tickets</b></div><div class="s">Ticketing export</div><div class="ft"><span class="file">tickets.csv</span><span class="rows">64 rows</span></div></div>
+      <div class="g tile a" style="--d:.55"><div class="top"><div class="src" style="background:#F5B544">GALA</div><b>Gala auction</b></div><div class="s">Bidder and table list</div><div class="ft"><span class="file">gala-2025.xlsx</span><span class="rows">41 rows</span></div></div>
+      <div class="g tile a" style="--d:.65"><div class="top"><div class="src" style="background:#5B7CFF">CHK</div><b>Paper checks</b></div><div class="s">Typed in by hand</div><div class="ft"><span class="file">check-log.xlsx</span><span class="rows">36 rows</span></div></div>
+    </div>
+    <button class="btn dark abs go a" style="--d:.9" onclick="next()">Drop all 4 lists &nbsp;▸</button>
+  </section>
+
+  <!-- BEAT 1 -->
+  <section class="beat" id="b1">
+    <div class="abs big1 a" style="--d:.1"><div class="n num">261</div><div class="l">rows, from 4 places</div>
+      <div class="leg"><div><i style="background:#2AA58F"></i>GiveMiamiDay.org</div><div><i style="background:#F06A5A"></i>Event tickets</div><div><i style="background:#F5B544"></i>Gala auction</div><div><i style="background:#5B7CFF"></i>Paper checks</div></div></div>
+    <div class="abs field" id="field"></div>
+  </section>
+
+  <!-- BEAT 2 -->
+  <section class="beat" id="b2">
+    <div class="abs cnt a" style="--d:.1"><div class="from num">261</div><div class="to num" id="cnt2">214</div><div class="l">people</div>
+      <div class="d"><b>47 duplicates found.</b><br>40 matched automatically.<br><b>7 need your OK.</b></div></div>
+    <div class="abs mstage">
+      <div class="mc c1"><i style="background:#2AA58F"></i>Rosa M. Delgado<span class="m">$250</span></div>
+      <div class="mc c2"><i style="background:#5B7CFF"></i>R. Delgado<span class="m">$500</span></div>
+      <div class="mc c3"><i style="background:#F5B544"></i>Rosa Delgado<span class="m">$150</span></div>
+      <div class="g mcard a" style="--d:1.7">
+        <div class="fw"><img class="face" style="width:170px;height:170px" src="https://i.pravatar.cc/240?img=32"><div class="bdg" style="min-width:48px;height:48px;font-size:26px;right:-10px;bottom:-6px">3</div></div>
+        <h2>Rosa M. Delgado</h2>
+        <div style="font-size:25px;color:var(--ink-2);margin-top:6px;font-weight:600">Same person, found 3 times</div>
+        <div class="why"><span class="tag teal">Same street address</span><span class="tag teal">Same email</span><span class="tag teal">Same ZIP code</span></div>
+        <button class="btn teal ok" style="font-size:24px;padding:18px 38px">✓ &nbsp;Merge them</button>
+      </div>
+    </div>
+    <div class="abs also a" style="--d:1.9"><h3>Also found</h3>
+      <div class="p"><div class="fw"><img class="face" style="width:62px;height:62px" src="https://i.pravatar.cc/120?img=15"><div class="bdg" style="min-width:28px;height:28px;font-size:15px">2</div></div><div><b>Joshua Carter</b><span>Josh Carter · Joshua Carter</span></div><div class="pc">93%</div></div>
+      <div class="p"><div class="fw"><img class="face" style="width:62px;height:62px" src="https://i.pravatar.cc/120?img=44"><div class="bdg" style="min-width:28px;height:28px;font-size:15px">2</div></div><div><b>Alvarez Family Fund</b><span>2 gala tables</span></div><div class="pc">91%</div></div>
+      <div class="p"><div class="fw"><img class="face" style="width:62px;height:62px" src="https://i.pravatar.cc/120?img=26"><div class="bdg" style="min-width:28px;height:28px;font-size:15px">2</div></div><div><b>Marguerite Désir</b><span>M. Desir · M. Désir</span></div><div class="pc">84%</div></div>
+    </div>
+    <div class="abs note2 a" style="--d:2.1">You approve every merge. Nothing is deleted, and you can undo any of them.</div>
+    <div class="g abs ask a" style="--d:2.2"><div class="k"><i></i>We asked OpenAI Decisions</div><div class="q">Are these three records the same person?</div><div class="bar"><i style="--w:97%;background:var(--teal)"></i></div><div class="r"><span>Yes</span><b>97%</b></div></div>
+  </section>
+
+  <!-- BEAT 3 -->
+  <section class="beat" id="b3">
+    <div class="abs slip a" style="--d:.1"><div class="n num">$18,400</div></div>
+    <div class="abs slipt a" style="--d:.3"><div class="h">of regular giving is slipping away.</div><div class="s"><b>11 people</b> gave every year, on a schedule. They haven't given yet. <b>Nine</b> of them gave on Give Miami Day.</div></div>
+    <div class="g abs tidep a" style="--d:.5">
+      <div class="lane1"><div class="lab"><span style="color:var(--teal)">●</span>Still giving <span>· 88 people, right on schedule</span></div><div class="faces" id="steady"></div></div>
+      <div class="under"></div>
+      <svg class="wave" viewBox="0 0 1760 60" preserveAspectRatio="none"><path d="M0 34 C 150 6, 300 62, 450 34 S 750 6, 900 34 S 1200 62, 1350 34 S 1650 6, 1760 30 L1760 60 L0 60Z" fill="rgba(240,106,90,.0)"/><path d="M0 34 C 150 6, 300 62, 450 34 S 750 6, 900 34 S 1200 62, 1350 34 S 1650 6, 1760 30" fill="none" stroke="#F06A5A" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/></svg>
+      <div class="lane2"><div class="lab">● Slipping <span style="color:var(--ink-2)">· 11 people</span></div>
+        <div class="slc">
+          <div class="sc"><img class="face" src="https://i.pravatar.cc/120?img=32"><div><b>Rosa Delgado</b><span>$2,500</span></div></div>
+          <div class="sc"><img class="face" src="https://i.pravatar.cc/120?img=12"><div><b>Theodore Baptiste</b><span>$1,800</span></div></div>
+          <div class="sc"><img class="face" src="https://i.pravatar.cc/120?img=26"><div><b>Marguerite Désir</b><span>$1,000</span></div></div>
+          <div class="sc"><img class="face" src="https://i.pravatar.cc/120?img=5"><div><b>Kenji Watanabe</b><span>$900</span></div></div>
+          <div class="sc more">+7</div>
+        </div></div>
+    </div>
+    <button class="btn dark abs a" style="right:56px;top:770px;--d:1.6" onclick="next()">Start with Rosa &nbsp;▸</button>
+    <div class="g abs ask a" style="--d:1.4"><div class="k"><i style="background:var(--coral)"></i>We asked OpenAI Decisions</div><div class="q">Will Rosa give this Give Miami Day?</div><div class="bar"><i style="--w:18%;background:var(--coral)"></i></div><div class="r"><span>Probably not</span><b>18% yes</b></div></div>
+  </section>
+
+  <!-- BEAT 4 -->
+  <section class="beat" id="b4">
+    <div class="g abs prof a" style="--d:.1">
+      <img class="face" src="https://i.pravatar.cc/260?img=32">
+      <h2>Rosa Delgado</h2>
+      <div class="p">Gave to the mentoring kids every Give Miami Day since 2021.<br><b style="color:var(--ink)">$4,150</b> in total.</div>
+      <div class="row"><div class="ring"><svg width="132" height="132" viewBox="0 0 132 132"><circle cx="66" cy="66" r="56" fill="none" stroke="#fff" stroke-width="12"/><circle cx="66" cy="66" r="56" fill="none" stroke="#F06A5A" stroke-width="12" stroke-dasharray="352" stroke-dashoffset="63" stroke-linecap="round"/></svg><div class="v">82%</div></div><div class="t">likely to skip this year<span>without a call</span></div></div>
+    </div>
+    <div class="g abs noteP a" style="--d:.35">
+      <h3>Her note, already written <span class="tag">written from her record</span></h3>
+      <div class="sheet"><p>Hi Rosa,</p><p>Give Miami Day is next Thursday, and I wanted to reach you first. You've been with our mentoring kids every year since 2021, and your December check helped us keep every match going through the spring.</p><p>If you're planning to give again, I'd love to make sure it lands where you want it. And if anything has changed, thank you.</p><p style="margin:0">Denise · Tidepath Family Alliance</p></div>
+      <div class="facts"><span>GMD gifts 2021 to 2025</span><span>Designation: Mentoring</span><span>Check Dec 2025 $500</span></div>
+      <div class="actions"><button class="btn dark">☎ &nbsp;Call Rosa</button><button class="btn">Copy the note</button></div>
+    </div>
+    <div class="g abs ask a" style="--d:1.2"><div class="k"><i style="background:var(--blue)"></i>We asked OpenAI Decisions</div><div class="q">Is anything in this note not in her record?</div><div class="bar"><i style="--w:2%;background:var(--blue)"></i></div><div class="r"><span>No. Safe to send.</span><b>2%</b></div></div>
+  </section>
+
+  <div class="g abs capbar"><div class="cap" id="cap"></div><div class="sub" id="sub"></div></div>
+  <div class="g abs nav l" onclick="prev()">‹</div>
+  <div class="g abs nav r" onclick="next()">›</div>
+  <div class="abs dots" id="dots"></div>
+</div>
+
+<script>
+const caps=[
+ ["Four lists. Four formats. Nobody knows who's who.","This is what the fundraiser gets every month."],
+ ["261 rows. Look closely: some of these are the same person.","Rosa is in there three times."],
+ ["Rosa was in your lists 3 times. Now she's one person.","Same street, same email, never the same day."],
+ ["11 people who gave every year haven't yet.","Give Miami Day is in 11 days. This is who to call."],
+ ["The note is written from Rosa's real history.","Nothing made up. One tap to call."]
+];
+const stepFor=[1,1,2,3,4];
+const names=[["Rosa M. Delgado","g",250,1],["Theodore Baptiste","g",150],["Kenji Watanabe","g",75],["R. Delgado","c",500,1],["Marguerite Désir","c","1,000"],["M. Desir","c",500],["Josh Carter","t","1,500"],["Joshua Carter","g",100],["Ana Castellanos","g",60],["A. Castellanos","t",120],["Rosa Delgado","a",150,1],["Alvarez Family Fund","a","1,500"],["The Alvarez Fam.","a",750],["Luis Oyola","g",40],["J. Pierre-Louis","c",200],["Jean Pierre-Louis","g",50],["Priya Nair","t",90],["Mei Chen","g",25],["D. Williams","c",300],["Dana Williams","g",100],["Carlos Fernández","t",80],["Yadira Ramírez","g",35],["Noah Kim","g",20],["S. Haddad","a",400]];
+const col={g:"#2AA58F",t:"#F06A5A",a:"#F5B544",c:"#5B7CFF"};
+document.getElementById('field').innerHTML=names.map((n,i)=>`<div class="chip a ${n[3]?'hl':''}" style="--d:${.25+i*.04}"><i style="background:${col[n[1]]}"></i>${n[0]}<span class="m">$${n[2]}</span></div>`).join('');
+document.getElementById('steady').innerHTML=[3,8,9,10,11,13,14,16,17,18,19,20,21,22,23,24,25,27,28,29,30,31].map(i=>`<img class="face" src="https://i.pravatar.cc/120?img=${i}">`).join('');
+document.getElementById('dots').innerHTML=caps.map(()=>'<i></i>').join('');
+const beats=[...document.querySelectorAll('.beat')]; let cur=-1;
+function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080);const cv=document.getElementById('cv');cv.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+function go(i){
+  i=Math.max(0,Math.min(beats.length-1,i)); if(i===cur)return; cur=i;
+  beats.forEach((b,k)=>b.classList.toggle('on',k===i));
+  document.querySelectorAll('.st').forEach(s=>{const n=+s.dataset.s;s.classList.toggle('on',n===stepFor[i]);s.classList.toggle('done',n<stepFor[i])});
+  document.querySelectorAll('#dots i').forEach((d,k)=>d.classList.toggle('on',k===i));
+  const c=document.getElementById('cap'),s=document.getElementById('sub');c.style.opacity=s.style.opacity=0;
+  setTimeout(()=>{c.textContent=caps[i][0];s.textContent=caps[i][1];c.style.opacity=s.style.opacity=1},static_?0:300);
+  if(i===2&&!static_){const el=document.getElementById('cnt2');let t0=null;const d=1800,delay=1700;el.textContent='261';const tick=ts=>{if(!t0)t0=ts;const e=ts-t0-delay;if(e<0){requestAnimationFrame(tick);return}const p=Math.min(1,e/d),q=1-Math.pow(1-p,3);el.textContent=Math.round(261-(261-214)*q);if(p<1)requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+}
+function next(){go(cur+1)} function prev(){go(cur-1)}
+const static_=location.search.includes('static'); if(static_)document.documentElement.classList.add('static');
+addEventListener('keydown',e=>{if(['ArrowRight',' ','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();prev()}if(/^[1-5]$/.test(e.key))go(+e.key-1)});
+go(+(location.hash.slice(1)||0));
+</script>
+</body></html>

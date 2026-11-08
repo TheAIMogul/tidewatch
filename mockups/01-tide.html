@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Tidewatch · Tide</title><link rel="stylesheet" href="mock.css">
+<style>
+.hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: end; margin-bottom: 36px; }
+.hero .big { font-family: var(--display); font-size: 72px; line-height: 1; letter-spacing: -0.03em; font-weight: 600; }
+.hero .big em { font-style: normal; color: var(--coral); }
+.hero p { font-size: 17px; color: var(--ink-2); margin: 14px 0 0; max-width: 520px; }
+.hero p b { color: var(--ink); font-weight: 600; }
+.stats { display: flex; gap: 28px; margin-top: 22px; }
+.stats div { border-left: 1px solid var(--rule-strong); padding-left: 12px; }
+.stats .v { font-family: var(--mono); font-size: 18px; }
+.stats .k { font-size: 12px; color: var(--ink-3); }
+.chart { padding: 18px 20px 12px; }
+.chart .hd { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.chart .hd .label { }
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--ink-3); }
+.legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; background: var(--seaglass); }
+.legend i.exp { background: none; border-top: 2px dashed var(--rule-strong); height: 0; }
+.legend i.gap { background: var(--coral-wash); height: 10px; }
+.grid2 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; align-items: start; }
+.list .row { display: grid; grid-template-columns: 22px 1.15fr 1.6fr 96px 118px 64px; gap: 14px; align-items: center; padding: 12px 18px; border-top: 1px solid var(--rule); }
+.list .row:first-of-type { border-top: 0; }
+.list .head { padding: 14px 18px 8px; display: grid; grid-template-columns: 22px 1.15fr 1.6fr 96px 118px 64px; gap: 14px; }
+.rank { font-family: var(--mono); color: var(--ink-3); font-size: 12px; }
+.who b { display: block; font-weight: 600; }
+.who span { font-size: 12px; color: var(--ink-3); }
+.why { font-size: 13px; color: var(--ink-2); }
+.money { font-family: var(--mono); text-align: right; }
+.money small { display: block; color: var(--ink-3); font-size: 11px; font-family: var(--sans); }
+.strip { display: flex; gap: 3px; }
+.side .sec { padding: 16px 18px; }
+.srcs div { display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--rule); font-size: 13px; }
+.srcs div:first-of-type { border-top: 0; }
+.srcs .n { font-family: var(--mono); color: var(--ink-2); }
+.bar { height: 6px; background: var(--foam-3); border-radius: 3px; overflow: hidden; margin-top: 8px; display: flex; }
+.bar i { display: block; height: 100%; }
+.tiers div { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; padding: 7px 0; border-top: 1px solid var(--rule); font-size: 13px; align-items: center; }
+.tiers div:first-of-type { border-top: 0; }
+.tiers .n { font-family: var(--mono); color: var(--ink-2); }
+.tiers .d { font-family: var(--mono); color: var(--ink-3); font-size: 12px; }
+</style></head>
+<body><div class="shell">
+<aside class="rail">
+  <div class="brand"><div class="mark"></div><div><b>Tidewatch</b><small>Tidepath Family Alliance</small></div></div>
+  <nav class="nav">
+    <a class="active"><svg viewBox="0 0 24 24"><path d="M3 15c3-3 6-3 9 0s6 3 9 0M3 9c3-3 6-3 9 0s6 3 9 0"/></svg>Tide</a>
+    <a><svg viewBox="0 0 24 24"><path d="M8 7h8M8 12h8M8 17h5"/><circle cx="4" cy="7" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="17" r="1"/></svg>Review<span class="cnt">7</span></a>
+    <a><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Donors<span class="cnt">214</span></a>
+    <a><svg viewBox="0 0 24 24"><path d="M12 3v12M6 9l6 6 6-6"/><path d="M4 21h16"/></svg>Imports<span class="cnt">4</span></a>
+  </nav>
+  <div class="railfoot"><b>Give Miami Day</b>Thu Nov 19 · 11 days</div>
+</aside>
+<main class="main">
+  <div class="topbar"><div><h1>The tide, this week</h1><div class="sub">Mon Nov 9 to Sun Nov 15, 2026 · from 4 sources, 214 donors, resolved</div></div>
+    <div class="actions"><button class="btn">Export call list</button><button class="btn primary">Import a list</button></div></div>
+
+  <section class="hero">
+    <div>
+      <div class="big"><em>$18,400</em></div>
+      <p>of regular giving is <b>drifting</b> right now. <b>11 donors</b> who gave on schedule last year have not given this year. Nine of them gave on Give Miami Day.</p>
+      <div class="stats">
+        <div><div class="v">$212,980</div><div class="k">given this year, all sources</div></div>
+        <div><div class="v">7</div><div class="k">merges waiting for you</div></div>
+        <div><div class="v">3</div><div class="k">monthly cards that stopped</div></div>
+      </div>
+    </div>
+    <div class="card chart">
+      <div class="hd"><span class="label">Monthly giving · 24 months</span><div class="legend"><span><i></i>Received</span><span><i class="exp"></i>Expected from cadence</span><span><i class="gap"></i>Drift</span></div></div>
+      <svg viewBox="0 0 520 170" width="100%" height="190" style="overflow:visible">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E8B7A" stop-opacity=".18"/><stop offset="1" stop-color="#2E8B7A" stop-opacity="0"/></linearGradient></defs>
+        <g stroke="rgba(16,35,58,0.10)" stroke-width="1"><line x1="0" y1="40" x2="520" y2="40"/><line x1="0" y1="80" x2="520" y2="80"/><line x1="0" y1="120" x2="520" y2="120"/><line x1="0" y1="150" x2="520" y2="150"/></g>
+        <rect x="454" y="20" width="66" height="130" fill="#F8E6DF"/>
+        <path d="M0 128 L22 124 L44 130 L66 118 L88 122 L110 60 L132 126 L154 120 L176 128 L198 116 L220 124 L242 118 L264 122 L286 118 L308 126 L330 112 L352 120 L374 54 L396 118 L418 116 L440 126 L462 112 L484 118 L506 118 L520 120 L520 150 L0 150Z" fill="url(#g)"/>
+        <path d="M0 128 L22 124 L44 130 L66 118 L88 122 L110 60 L132 126 L154 120 L176 128 L198 116 L220 124 L242 118 L264 122 L286 118 L308 126 L330 112 L352 120 L374 54 L396 118 L418 116 L440 126 L462 112 L484 118" fill="none" stroke="#2E8B7A" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M462 112 L484 96 L506 36 L520 40" fill="none" stroke="rgba(16,35,58,0.35)" stroke-width="2" stroke-dasharray="4 4"/>
+        <circle cx="506" cy="36" r="4" fill="#F6F3EC" stroke="#D96A4C" stroke-width="2"/>
+        <text x="110" y="52" font-family="IBM Plex Mono" font-size="10" fill="#7A8699" text-anchor="middle">GMD '24</text>
+        <text x="374" y="46" font-family="IBM Plex Mono" font-size="10" fill="#7A8699" text-anchor="middle">GMD '25</text>
+        <text x="487" y="14" font-family="IBM Plex Mono" font-size="10" fill="#D96A4C" text-anchor="middle">Nov 19</text>
+        <g font-family="IBM Plex Mono" font-size="10" fill="#7A8699"><text x="0" y="166">Dec '24</text><text x="260" y="166" text-anchor="middle">Jun '25</text><text x="520" y="166" text-anchor="end">Nov '26</text></g>
+      </svg>
+    </div>
+  </section>
+
+  <div class="grid2">
+    <section class="card list">
+      <div class="head"><span></span><span class="label">Call before Nov 19</span><span class="label">Why now</span><span class="label" style="text-align:right">At risk</span><span class="label">Cadence · 12 mo</span><span></span></div>
+      <div class="row"><span class="rank">1</span><div class="who"><b>Rosa M. Delgado</b><span>Little Havana · 3 records merged · <span class="pill gold" style="padding:0 6px;font-size:11px">Anchor</span></span></div><div class="why">Gave every Give Miami Day since 2021. Nothing yet this year.</div><div class="money">$2,500<small>last gift Nov 2025</small></div><div class="strip"><i class="dot on"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot miss"></i><i class="dot fut"></i></div><button class="btn accent" style="padding:6px 10px">Open</button></div>
+      <div class="row"><span class="rank">2</span><div class="who"><b>Theodore Baptiste</b><span>Monthly · card declined since Aug</span></div><div class="why">$150 a month for 31 months. Three failed charges, no gift since Jul 28.</div><div class="money">$1,800<small>$150 × 12</small></div><div class="strip"><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot miss"></i><i class="dot miss"></i><i class="dot miss"></i><i class="dot fut"></i></div><button class="btn" style="padding:6px 10px">Open</button></div>
+      <div class="row"><span class="rank">3</span><div class="who"><b>The Alvarez Family Fund</b><span>Gala · 2 records merged</span></div><div class="why">Bought a table in 2024 and 2025. No ticket on this year's list.</div><div class="money">$1,500<small>gala Mar 2025</small></div><div class="strip"><i class="dot off"></i><i class="dot off"></i><i class="dot on"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot fut"></i></div><button class="btn" style="padding:6px 10px">Open</button></div>
+      <div class="row"><span class="rank">4</span><div class="who"><b>Marguerite Désir</b><span>Checks · December giver</span></div><div class="why">A check every December, 2019 to 2024. None in Dec 2025.</div><div class="money">$1,000<small>check #1042</small></div><div class="strip"><i class="dot miss"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot off"></i><i class="dot fut"></i></div><button class="btn" style="padding:6px 10px">Open</button></div>
+      <div class="row"><span class="rank">5</span><div class="who"><b>Kenji Watanabe</b><span>Monthly · card expired</span></div><div class="why">$75 a month since 2023. Card expired Sep 30.</div><div class="money">$900<small>$75 × 12</small></div><div class="strip"><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot miss"></i><i class="dot miss"></i><i class="dot fut"></i></div><button class="btn" style="padding:6px 10px">Open</button></div>
+      <div class="row" style="justify-content:center;display:flex;padding:12px"><a style="font-size:13px">Show all 11 →</a></div>
+    </section>
+
+    <aside class="side">
+      <div class="card sec" style="margin-bottom:16px">
+        <div class="label" style="margin-bottom:10px">Where the money came from · 2026</div>
+        <div class="bar"><i style="width:48%;background:var(--seaglass)"></i><i style="width:22%;background:var(--harbor)"></i><i style="width:18%;background:var(--gold)"></i><i style="width:12%;background:var(--ink-3)"></i></div>
+        <div class="srcs" style="margin-top:10px">
+          <div><span>GiveMiamiDay.org export</span><span class="n">$102,230</span></div>
+          <div><span>Event tickets</span><span class="n">$46,900</span></div>
+          <div><span>Gala auction</span><span class="n">$38,350</span></div>
+          <div><span>Checks (typed in)</span><span class="n">$25,500</span></div>
+        </div>
+      </div>
+      <div class="card sec">
+        <div class="label" style="margin-bottom:10px">Everyone, ranked</div>
+        <div class="tiers">
+          <div><span><span class="pill gold">Anchor</span> gave 3+ years, top 10% by dollars</span><span class="n">19</span><span class="d">$96k</span></div>
+          <div><span><span class="pill sea">Steady</span> on cadence, no gap</span><span class="n">88</span><span class="d">$71k</span></div>
+          <div><span><span class="pill coral">Drifting</span> expected gift is late</span><span class="n">11</span><span class="d">$18k</span></div>
+          <div><span><span class="pill">New</span> first gift this year</span><span class="n">64</span><span class="d">$21k</span></div>
+          <div><span><span class="pill">Quiet</span> no gift in 24 months</span><span class="n">32</span><span class="d">—</span></div>
+        </div>
+        <div class="hair" style="margin-top:12px;padding-top:10px;font-size:12px" class="muted"><span class="muted">Ranked by loyalty, recency, dollars and lapse risk. Risk is estimated by OpenAI Decisions and shown as a probability, never a verdict.</span></div>
+      </div>
+    </aside>
+  </div>
+</main></div></body></html>
