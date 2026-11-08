@@ -19,7 +19,7 @@ So one donor ends up in the database as "Rosa Delgado", "Rosa M. Delgado" and "R
 ## What it does
 
 1. **Drop your lists.** GiveMiamiDay.org export, ticketing, gala, typed-in checks.
-2. **Find the people.** Duplicates are found and shown side by side. A person approves each merge. Nothing is deleted, and every merge can be undone.
+2. **Find the people.** Duplicates are found and shown side by side. A person approves each merge. Nothing is deleted: every source record and gift is kept, and each merge is logged on the donor's ledger.
 3. **See who's slipping.** Donors whose expected gift is late, ranked by dollars at risk.
 4. **Make the call.** A note drafted only from that donor's real record, with the facts it used shown next to it.
 

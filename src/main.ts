@@ -82,7 +82,7 @@ async function render() {
   $("#crumb").innerHTML = CRUMB[route.v] ?? "<b>Today</b>";
   try {
     if (!S) { v.innerHTML = `<div class="card" style="padding:20px"><div class="skel" style="width:40%"></div></div>`; return; }
-    if (route.v === "story") return await renderStory(v);
+    if (route.v === "story") return route.id === 2 ? await renderStory2(v) : await renderStory(v);
     if (route.v === "imports") return renderImports(v);
     if (!S.run) return renderEmpty(v);
     if (route.v === "duplicates") return await renderDuplicates(v);
@@ -273,7 +273,7 @@ async function openMerge(id: number) {
   m.innerHTML = `<div class="mh">${avatar(d.avatar, d.name, 40, n, true)}<div><h2>${esc(d.name)}, ${words[n] ?? n} ways</h2><p>${esc(sub)}.</p></div>${gauge(d.probability)}</div>
     ${d.records.map((r) => `<div class="mrec"><span class="sbg" style="background:${COLORS[r.code]}">${r.code}</span><div><b>${esc(r.name)}</b><span class="d">${r.first ? (r.first === r.last ? date(r.first) : `${monYear(r.first)} – ${monYear(r.last)}`) : "—"} · ${money(r.total)}</span></div><div class="ct">${[r.email, r.phone].filter(Boolean).map(esc).join(" · ") || "no email or phone"}<br>${esc(r.street ?? "")}${r.zip ? " " + esc(r.zip) : ""}</div><span class="k">${keeps(d, r)}</span></div>`).join("")}
     <div class="mev">${d.evidence.map((e) => `<span class="chip ${e.ok ? "acc" : ""}">${esc(e.text)}</span>`).join("")}</div>
-    <div class="mf"><span class="n">OpenAI Decisions · predicate · ${d.decision?.latency_ms ?? "—"} ms. Nothing is deleted; undo any time.</span><button class="btn" data-keep>Keep separate</button><button class="btn acc" data-merge>${CHECK}Merge ${n} records</button></div>`;
+    <div class="mf"><span class="n">OpenAI Decisions · predicate · ${d.decision?.latency_ms ?? "—"} ms. Nothing is deleted; every source record is kept.</span><button class="btn" data-keep>Keep separate</button><button class="btn acc" data-merge>${CHECK}Merge ${n} records</button></div>`;
   m.querySelector("[data-keep]")!.addEventListener("click", () => decideCand(id, "keep"));
   m.querySelector("[data-merge]")!.addEventListener("click", () => decideCand(id, "merge"));
 }
@@ -476,7 +476,7 @@ async function renderStory(v: HTMLElement) {
       if (rosa) { const d = await api<T.DonorDetail>(`/donors/${rosa.id}`); note = d.outreach?.draft ?? ""; }
     } catch { /* fall back to the written story */ }
   }
-  const sentences = (note.replace(/^Hi [^,\n]+,\s*/, "").split(/\n\s*\n/)[0] ?? "").split(/(?<=[.?])\s+/).slice(0, 1).join(" ");
+  const sentences = (note.replace(/^Hi [^,\n]+,\s*/, "").split(/\n\s*\n/)[0] ?? "").split(/(?<=[.?])\s+/).find((x) => x.length > 60 && !/^this is\b/i.test(x)) ?? "";
   const excerpt = sentences || "Give Miami Day is next Thursday, and you've been with our mentoring kids every year since 2021.";
   const rosaAv = avatar(rosa?.avatar ?? "", "Rosa Delgado", 56, 3, false);
   const dot = (y: string, k: "on" | "off" | "miss") => `<div class="sy"><i class="${k}"></i><span>${y}</span></div>`;
@@ -529,8 +529,115 @@ async function renderStory(v: HTMLElement) {
       <div class="st-go"><a class="btn" href="#imports">Watch it run</a><a class="btn pri" href="#today">See today's call list</a></div>`
       : `<div class="st-lab">See it on real lists</div><div class="st-go" style="margin-top:0">${importBody("dropS")}</div>`}
     </div>
+    ${pager(1)}
   </div>`;
   if (!has) bindImport(v, "dropS");
+}
+
+function pager(page: 1 | 2) {
+  return `<div class="st-pager"><a class="btn ${page === 1 ? "ghost" : ""}" href="#story" ${page === 1 ? 'aria-disabled="true"' : ""}>‹ The story</a><span class="dots"><i class="${page === 1 ? "on" : ""}"></i><i class="${page === 2 ? "on" : ""}"></i></span><a class="btn ${page === 2 ? "ghost" : "pri"}" href="#story/2" ${page === 2 ? 'aria-disabled="true"' : ""}>Why it works ›</a></div>`;
+}
+window.addEventListener("keydown", (e) => {
+  if (route.v !== "story" || (e.target as HTMLElement)?.closest?.("textarea,input")) return;
+  if (["ArrowRight", "PageDown", " "].includes(e.key) && route.id !== 2) { e.preventDefault(); location.hash = "story/2"; }
+  if (["ArrowLeft", "PageUp"].includes(e.key) && route.id === 2) { e.preventDefault(); location.hash = "story"; }
+});
+
+async function renderStory2(v: HTMLElement) {
+  const s = S!.summary, r = S!.run, has = !!r && s.donors > 0;
+  const dur = r?.finished_at ? Math.round((Date.parse(r.finished_at) - Date.parse(r.started_at)) / 1000) : 20;
+  // Real examples from the loaded data, with the story's values as fallbacks.
+  let prob = 0.98, risk = { name: "Theodore Baptiste", p: 0.99 }, channel = "phone", rosaAv = "";
+  let late: { name: string; avatar: string }[] = [], lateN = s.lapsing || 11;
+  if (has) {
+    try {
+      const [cands, calls, rosaList] = await Promise.all([api<T.CandsResp>("/candidates?status=pending"), api<T.CallsResp>("/calls"), api<T.DonorsResp>("/donors?q=Rosa")]);
+      const c = cands.items.find((x) => /delgado/i.test(x.name)); if (c?.probability) prob = c.probability;
+      late = calls.items.filter((x) => x.avatar).slice(0, 7).map((x) => ({ name: x.name, avatar: x.avatar })); lateN = calls.items.length || lateN;
+      const top = [...calls.items].sort((x, y) => (y.risk ?? 0) - (x.risk ?? 0))[0]; if (top?.risk != null) risk = { name: top.name, p: top.risk };
+      const rosa = rosaList.items.find((d) => /delgado/i.test(d.name));
+      if (rosa) { rosaAv = rosa.avatar; const d = await api<T.DonorDetail>(`/donors/${rosa.id}`); if (d.donor.channel) channel = d.donor.channel; }
+    } catch { /* keep the story values */ }
+  }
+  const tick = svgI('<path d="M5 12l5 5 9-10"/>', 'style="stroke-width:2.6"');
+  const badge = (t: string) => `<span class="v2-badge"><i>${tick}</i>${t}</span>`;
+  const lvl = Math.min(3, Math.round(risk.p * 3));
+  const levels = ["On schedule", "Some risk", "Likely", "Lapsed"];
+  const ICON: Record<string, string> = {
+    Workers: '<path d="M4 7l8-4 8 4v10l-8 4-8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/>',
+    D1: '<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>',
+    R2: '<rect x="4" y="4" width="16" height="6" rx="1.5"/><rect x="4" y="14" width="16" height="6" rx="1.5"/><path d="M8 7h.01M8 17h.01"/>',
+    Workflows: '<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="12" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M8.5 6H12a3 3 0 0 1 3 3v.5M8.5 18H12a3 3 0 0 0 3-3v-.5"/>',
+    "Workers AI": '<path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path d="M18 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
+  };
+  v.innerHTML = `<div class="story">
+    <div class="st-hero fade" style="margin-bottom:18px">
+      <div class="st-kicker"><span class="chip">Why it works</span><span>Challenge 2 · duplicate donors, and donors who quietly stop giving</span></div>
+      <h1 class="h2">“I just want to know each donor is on our list once, <em>and to hear about a late gift while there's still time to call.”</em></h1>
+    </div>
+    <div class="v2-grid">
+
+      <div class="card v2 fade" style="animation-delay:.1s">
+        <div class="v2-h"><span class="st-n">1</span><h3>Solves Denise's problem</h3></div>
+        <div class="v2-funnel">
+          <div class="v2-stack"><span style="background:${COLORS.GMD}"></span><span style="background:${COLORS.TIX}"></span><span style="background:${COLORS.GALA}"></span><span style="background:${COLORS.CHK}"></span></div>
+          <div><b class="num">${s.rows || 293}</b><span>rows</span></div>
+          <div class="v2-arrow">${svgI('<path d="M5 12h14M13 6l6 6-6 6"/>')}</div>
+          <div class="v2-person">${avatar(rosaAv, "Rosa Delgado", 34, 3)}</div>
+          <div><b class="num acc">${s.donors || 147}</b><span>people</span></div>
+        </div>
+        <div class="v2-badges">${badge("On the list once")}${badge("Staff approve merges")}${badge("Late gifts found")}${badge("Failed cards caught")}${badge("Calls tracked")}</div>
+        <div class="v2-faces">${late.map((d, i) => `<span style="z-index:${10 - i}">${avatar(d.avatar, d.name, 34)}</span>`).join("")}${lateN > late.length ? `<em>+${lateN - late.length}</em>` : ""}<p><b>${lateN} donors</b> to call before Give Miami Day</p></div>
+        <div class="v2-big"><b class="num">${money(s.atRisk || 7080)}</b><span>in yearly giving, found in time</span></div>
+      </div>
+
+      <div class="card v2 fade" style="animation-delay:.2s">
+        <div class="v2-h"><span class="st-n">2</span><h3>AI judges. People decide.</h3></div>
+        <div class="v2-flow">
+          <div class="v2-node head">Two records look alike</div>
+          <div class="v2-split">
+            <div class="v2-path"><span class="v2-line t"></span><div class="v2-node t">Same email or phone</div><span class="v2-line t"></span><div class="v2-node out t">${tick}Merged</div></div>
+            <div class="v2-path"><span class="v2-line c"></span><div class="v2-node">Anything else ${gauge(prob, 40)}</div><span class="v2-line c"></span><div class="v2-node out c">To Denise</div></div>
+          </div>
+        </div>
+        <div class="v2-check">
+          <div class="v2-tile"><span class="chip">gpt-5.5</span><b>Writes the note</b></div>
+          <div class="v2-arrow sm">${svgI('<path d="M5 12h14M13 6l6 6-6 6"/>')}</div>
+          <div class="v2-tile acc"><span class="chip acc">Decisions</span><b>Checks every fact</b></div>
+        </div>
+        <div class="v2-ledger">
+          <div><i class="m"></i><b>Merged 3 records</b><span>Rosa Delgado</span><time>9:41 AM</time></div>
+          <div><i class="c"></i><b>Called</b><span>${esc(first(risk.name))}</span><time>10:05 AM</time></div>
+          <div><i class="n"></i><b>Note</b><span>Card updated</span><time>10:07 AM</time></div>
+        </div>
+        <p class="v2-cap">Nothing is deleted. Every step is on the record.</p>
+      </div>
+
+      <div class="card v2 fade" style="animation-delay:.3s">
+        <div class="v2-h"><span class="st-n">3</span><h3>Built on OpenAI</h3></div>
+        <div class="v2-counter"><b class="num">${(S!.decisions.questions || 326).toLocaleString("en-US")}</b><span>Decisions questions answered · ${cost(S!.decisions.cost)}</span></div>
+        <div class="v2-q"><span class="v2-qt">predicate</span><span class="v2-qq">Same donor?</span>${gauge(prob, 40)}</div>
+        <div class="v2-q"><span class="v2-qt">score</span><span class="v2-qq">Lapse risk · ${esc(first(risk.name))}</span>
+          <div class="v2-levels">${levels.map((l, i) => `<i class="${i === lvl ? "on" : ""}" title="${l}"></i>`).join("")}</div></div>
+        <div class="v2-q"><span class="v2-qt">choice</span><span class="v2-qq">Best channel</span>
+          <div class="v2-pills">${["phone", "email", "letter"].map((c) => `<span class="${c === channel ? "on" : ""}">${c}</span>`).join("")}</div></div>
+        <div class="v2-q"><span class="v2-qt gpt">gpt-5.5</span><span class="v2-qq">Call note, from the record only</span><span class="v2-doc">${svgI('<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/>')}</span></div>
+      </div>
+
+      <div class="card v2 fade" style="animation-delay:.4s">
+        <div class="v2-h"><span class="st-n">4</span><h3>Ready for Monday</h3></div>
+        <div class="v2-nums">
+          <div><b class="num">${dur}s</b><span>whole list</span></div>
+          <div><b class="num">$${(r?.cost ?? 0.07).toFixed(2)}</b><span>per import</span></div>
+          <div><b class="num">0</b><span>setup</span></div>
+        </div>
+        <div class="v2-stackgrid">${Object.entries(ICON).map(([k, d]) => `<div class="v2-cf">${svgI(d)}<span>${k}</span></div>`).join("")}<div class="v2-cf gh">${svgI('<path d="M9 19c-4 1.5-4-2-6-2.5M15 21v-3.5a3 3 0 0 0-.9-2.3c3-.3 6.1-1.5 6.1-6.6a5.1 5.1 0 0 0-1.4-3.6 4.8 4.8 0 0 0-.1-3.5s-1.1-.4-3.7 1.4a12.7 12.7 0 0 0-6.6 0C5.8.6 4.7 1 4.7 1a4.8 4.8 0 0 0-.1 3.5A5.1 5.1 0 0 0 3.2 8.1c0 5.1 3.1 6.3 6.1 6.6A3 3 0 0 0 8.4 17V21"/>')}<span>Open source</span></div></div>
+        <p class="v2-cap">Uses the exports they already have. Live at tidewatch.micahberkley.com.</p>
+      </div>
+
+    </div>
+    ${pager(2)}
+  </div>`;
 }
 
 // ---------- boot ----------
