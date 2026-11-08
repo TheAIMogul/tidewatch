@@ -12,7 +12,7 @@
   "upload_source_maps": true,
   // Donors, source records, gifts, merge candidates, the Decisions log.
   "d1_databases": [
-    { "binding": "DB", "database_name": "tidewatch", "database_id": "local-tidewatch", "migrations_dir": "migrations" }
+    { "binding": "DB", "database_name": "tidewatch", "database_id": "800fba79-dec6-433f-9497-f38395ed7747", "migrations_dir": "migrations" }
   ],
   // Every uploaded export is kept as-is.
   "r2_buckets": [{ "binding": "FILES", "bucket_name": "tidewatch-files" }],

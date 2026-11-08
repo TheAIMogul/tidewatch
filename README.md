@@ -6,9 +6,9 @@ Drop in every donor list you have. Tidewatch resolves every human to one record,
 
 Built for the [Give Miami Day](https://www.givemiamiday.org) community hackathon by The Miami Foundation, challenge 2: *duplicate donor records, and donors who quietly stop giving.*
 
-> **Status: working on local Cloudflare dev.** Import, entity resolution, lapse scoring, drafting, merge review and the call list all run end to end against real OpenAI Decisions and gpt-5.5 calls. Not yet deployed. All data in `public/samples/` is fictional.
+> **Live: https://tidewatch.micahberkley.workers.dev** · Import, entity resolution, lapse scoring, drafting, merge review and the call list all run end to end on Cloudflare against real OpenAI Decisions and gpt-5.5 calls. A full sample import takes about 20 seconds. All data in `public/samples/` is fictional.
 
-![Today](docs/screens/today.png)
+![Today](docs/screens/live/today.png)
 
 ## The problem
 
@@ -80,6 +80,16 @@ npx vitest run --config vitest.config.ts --maxWorkers=2
 ```
 
 Regenerate the sample exports with `python3 scripts/gen_sample.py`.
+
+## Deploy
+
+```bash
+npx wrangler d1 create tidewatch            # put the id in wrangler.jsonc
+npx wrangler r2 bucket create tidewatch-files
+npx wrangler d1 migrations apply tidewatch --remote
+npm run build && npx wrangler deploy
+npx wrangler secret put OPENAI_API_KEY
+```
 
 ## Data
 

@@ -172,16 +172,23 @@ export const judge = (env: Env, runId: number) => timed(env, runId, "judge", asy
 export async function rebuildDonor(env: Env, donorId: number) {
   const { results: recs } = await env.DB.prepare("SELECT r.*, s.code, s.label, (SELECT COUNT(*) FROM gifts g WHERE g.record_id = r.id) AS n FROM records r JOIN sources s ON s.id = r.source_id WHERE r.donor_id = ?").bind(donorId).all<any>();
   const { results: gifts } = await env.DB.prepare("SELECT g.date, g.amount, g.status, g.designation, s.code FROM gifts g JOIN records r ON r.id = g.record_id JOIN sources s ON s.id = g.source_id WHERE r.donor_id = ?").bind(donorId).all<Gift>();
+  const { stmt, s } = donorUpdate(env, donorId, recs, gifts);
+  await stmt.run();
+  return s;
+}
+
+/** Build one donor's row from its records and gifts. Pure apart from preparing the UPDATE. */
+function donorUpdate(env: Env, donorId: number, recs: any[], gifts: Gift[]) {
   const s = signals(gifts, env.TODAY, env.GMD_DATE);
   const name = recs.map((r) => r.name).sort((a: string, b: string) => b.length - a.length || a.localeCompare(b))[0] ?? "Unknown";
   // Prefer the value from the records with the most gifts behind them.
   const pick = (k: string) => { const c = new Map<string, number>(); for (const r of recs) if (r[k]) c.set(r[k], (c.get(r[k]) ?? 0) + 1 + r.n); return [...c].sort((a, b) => b[1] - a[1]).map((x) => x[0]); };
   const emails = pick("email"), streets = pick("street");
   const org = isOrg(name);
-  await env.DB.prepare(`UPDATE donors SET name=?, email=?, alt_emails=?, phone=?, street=?, zip=?, avatar=?, is_org=?, records=?, sources=?, pattern=?, state=?, expected=?, at_risk=?, lifetime=?, gift_count=?, first_gift=?, last_gift=?, last_amount=?, failed=?, years=?, loyalty=?, designation=?, reason=? WHERE id=?`)
+  const stmt = env.DB.prepare(`UPDATE donors SET name=?, email=?, alt_emails=?, phone=?, street=?, zip=?, avatar=?, is_org=?, records=?, sources=?, pattern=?, state=?, expected=?, at_risk=?, lifetime=?, gift_count=?, first_gift=?, last_gift=?, last_amount=?, failed=?, years=?, loyalty=?, designation=?, reason=? WHERE id=?`)
     .bind(name, emails[0] ?? null, JSON.stringify(emails.slice(1)), pick("phone")[0] ?? null, streets[0] ?? null, pick("zip")[0] ?? null, avatarFor(name, donorId, org), org ? 1 : 0, recs.length,
-      JSON.stringify([...new Set(recs.map((r: any) => r.code))]), s.pattern, s.state, s.expected, s.at_risk, s.lifetime, s.gift_count, s.first_gift, s.last_gift, s.last_amount, s.failed, s.years, s.loyalty, s.designation, s.reason, donorId).run();
-  return s;
+      JSON.stringify([...new Set(recs.map((r: any) => r.code))]), s.pattern, s.state, s.expected, s.at_risk, s.lifetime, s.gift_count, s.first_gift, s.last_gift, s.last_amount, s.failed, s.years, s.loyalty, s.designation, s.reason, donorId);
+  return { stmt, s };
 }
 
 export async function rerank(env: Env) {
@@ -201,8 +208,17 @@ export const people = (env: Env, runId: number) => timed(env, runId, "people", a
   const upd: D1PreparedStatement[] = [];
   [...groups.values()].forEach((ids, i) => ids.forEach((rid) => upd.push(env.DB.prepare("UPDATE records SET donor_id = ? WHERE id = ?").bind(donorIds[i], rid))));
   await batch(env, upd);
-  let lapsing = 0, atRisk = 0;
-  for (const id of donorIds) { const s = await rebuildDonor(env, id); if (s.state === "due" || s.state === "late") { lapsing++; atRisk += s.at_risk; } }
+  const { results: allRecs } = await env.DB.prepare("SELECT r.*, s.code, s.label, (SELECT COUNT(*) FROM gifts g WHERE g.record_id = r.id) AS n FROM records r JOIN sources s ON s.id = r.source_id WHERE s.run_id = ?").bind(runId).all<any>();
+  const { results: allGifts } = await env.DB.prepare("SELECT g.date, g.amount, g.status, g.designation, s.code, r.donor_id FROM gifts g JOIN records r ON r.id = g.record_id JOIN sources s ON s.id = g.source_id WHERE s.run_id = ?").bind(runId).all<any>();
+  const recsBy = new Map<number, any[]>(), giftsBy = new Map<number, Gift[]>();
+  for (const r of allRecs) recsBy.set(r.donor_id, [...(recsBy.get(r.donor_id) ?? []), r]);
+  for (const g of allGifts) giftsBy.set(g.donor_id, [...(giftsBy.get(g.donor_id) ?? []), g]);
+  let lapsing = 0, atRisk = 0; const stmts: D1PreparedStatement[] = [];
+  for (const id of donorIds) {
+    const { stmt, s } = donorUpdate(env, id, recsBy.get(id) ?? [], giftsBy.get(id) ?? []);
+    stmts.push(stmt); if (s.state === "due" || s.state === "late") { lapsing++; atRisk += s.at_risk; }
+  }
+  await batch(env, stmts);
   await rerank(env);
   return `${donorIds.length} donors · ${lapsing} lapsing · $${Math.round(atRisk).toLocaleString("en-US")} at risk`;
 });
@@ -222,9 +238,14 @@ const CHANNELS = [
 
 export async function donorFacts(env: Env, donorIds: number[]) {
   const out: any[] = [];
+  const ids = JSON.stringify(donorIds);
+  const { results: ds } = await env.DB.prepare("SELECT * FROM donors WHERE id IN (SELECT value FROM json_each(?))").bind(ids).all<any>();
+  const { results: gs } = await env.DB.prepare("SELECT r.donor_id, g.date, g.amount, g.status, g.designation, s.label AS source FROM gifts g JOIN records r ON r.id = g.record_id JOIN sources s ON s.id = g.source_id WHERE r.donor_id IN (SELECT value FROM json_each(?)) ORDER BY g.date DESC").bind(ids).all<any>();
+  const dBy = new Map(ds.map((d) => [d.id, d])), gBy = new Map<number, any[]>();
+  for (const g of gs) { const { donor_id, ...rest } = g; const a = gBy.get(donor_id) ?? []; if (a.length < 14) a.push(rest); gBy.set(donor_id, a); }
   for (const id of donorIds) {
-    const d = await env.DB.prepare("SELECT * FROM donors WHERE id = ?").bind(id).first<any>();
-    const { results: gifts } = await env.DB.prepare("SELECT g.date, g.amount, g.status, g.designation, s.label AS source FROM gifts g JOIN records r ON r.id = g.record_id JOIN sources s ON s.id = g.source_id WHERE r.donor_id = ? ORDER BY g.date DESC LIMIT 14").bind(id).all<any>();
+    const d = dBy.get(id); if (!d) continue;
+    const gifts = gBy.get(id) ?? [];
     const ok = gifts.filter((g: any) => g.status === "ok").map((g: any) => Date.parse(g.date)).sort((a: number, b: number) => a - b);
     const gaps = ok.slice(1).map((t: number, i: number) => Math.round((t - ok[i]) / 864e5)).sort((a: number, b: number) => a - b);
     const today = Date.parse(env.TODAY);
@@ -292,8 +313,8 @@ export const drafts = (env: Env, runId: number) => timed(env, runId, "draft", as
   await env.DB.prepare("DELETE FROM outreach").run();
   const { results } = await env.DB.prepare("SELECT id, name FROM donors WHERE state IN ('due','late') ORDER BY at_risk DESC LIMIT 12").all<{ id: number; name: string }>();
   const items: { donorId: number; name: string; facts: any; text: string; tin: number; tout: number }[] = [];
-  for (let i = 0; i < results.length; i += 4) {
-    const chunk = await Promise.all(results.slice(i, i + 4).map(async (d) => ({ donorId: d.id, name: d.name, ...(await draftFor(env, runId, d.id)) })));
+  for (let i = 0; i < results.length; i += 6) {
+    const chunk = await Promise.all(results.slice(i, i + 6).map(async (d) => ({ donorId: d.id, name: d.name, ...(await draftFor(env, runId, d.id)) })));
     items.push(...chunk);
   }
   const checks = items.length ? await checkDrafts(env, runId, items) : [];
