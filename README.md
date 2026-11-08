@@ -48,14 +48,14 @@ All on Cloudflare.
 
 ## Design
 
-Frosted glass over a slow gradient, faces with merge-count badges, one idea per screen, plain-English labels and type readable from the back of a room.
+Dense, professional SaaS: 13px Geist, hairline borders, one accent, data tables, and the OpenAI Decisions calls shown live in the product.
 
-`mockups/v3/index.html` is the stage prototype. Open it in a browser and advance with the arrow keys, space bar or a presentation clicker.
+`mockups/v4/index.html` is the current product prototype: Today, Duplicates, Donor and Import run screens. `mockups/v3` is the earlier stage-story version.
 
 ## Run the prototype
 
 ```bash
-open mockups/v3/index.html
+open mockups/v4/index.html
 ```
 
 ## Data
