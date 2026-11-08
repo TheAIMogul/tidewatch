@@ -1,13 +1,46 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tidewatch</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tidewatch</title>
+  <meta name="description" content="Donor intelligence for nonprofits that live on exports." />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="tide"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+  <div class="app" id="app">
+    <aside class="side">
+      <div class="ws"><div class="logo"></div><div><b id="orgName">Tidepath Family Alliance</b><span>Tidewatch · Nonprofit</span></div></div>
+      <div class="search" id="searchBtn"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Search donors<kbd>⌘K</kbd></div>
+      <nav class="nav" id="nav">
+        <a data-v="today"><svg class="i" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Today</a>
+        <a data-v="donors"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.5-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.7.8 2.8 2.5 3.2 5.2"/></svg>Donors<span class="c" id="nDonors"></span></a>
+        <a data-v="duplicates"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="12" height="12" rx="2.5"/><path d="M9 21h9.5a2.5 2.5 0 0 0 2.5-2.5V9"/></svg>Duplicates<span class="c hot" id="nDup"></span></a>
+        <a data-v="imports"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg>Imports<span class="c" id="nSrc"></span></a>
+        <div class="lab">Outreach</div>
+        <a data-v="calls"><svg class="i" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Call list<span class="c" id="nCalls"></span></a>
+        <div class="lab">Workspace</div>
+        <a data-v="settings"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Settings</a>
+      </nav>
+      <div class="foot"><div class="t">Give Miami Day · Thu, Nov 19</div><div class="v"><span class="mono" id="gmdDays">–</span><span id="gmdRisk" style="font-weight:400;color:var(--fg-3);font-size:12px"></span></div><div class="prog"><i id="gmdBar"></i></div></div>
+    </aside>
+    <main class="main">
+      <header class="top">
+        <div class="crumb" id="crumb"><b>Today</b></div>
+        <div class="r">
+          <div class="live"><span class="dot"></span>Decisions live · <span class="mono" id="qcount">0</span> questions</div>
+          <button class="btn" id="importBtn"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg>Import</button>
+          <span class="initials" style="width:28px;height:28px;font-size:11px;background:#E9F4F1;color:#0B6A5B">DN</span>
+        </div>
+      </header>
+      <section class="view on" id="view"></section>
+    </main>
+  </div>
+  <div class="scrim" id="scrim"><div class="modal" id="modal"></div></div>
+  <div class="toast" id="toast"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
 </html>

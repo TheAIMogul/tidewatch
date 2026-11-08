@@ -32,3 +32,6 @@ dist-ssr
 
 # third-party reference frames, not ours to publish
 mockups/ref/
+
+# local build checks
+mockups/build-check/

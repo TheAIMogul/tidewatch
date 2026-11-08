@@ -6,7 +6,9 @@ Drop in every donor list you have. Tidewatch resolves every human to one record,
 
 Built for the [Give Miami Day](https://www.givemiamiday.org) community hackathon by The Miami Foundation, challenge 2: *duplicate donor records, and donors who quietly stop giving.*
 
-> **Status: design phase.** The stage prototype and mockups are in [`mockups/`](mockups). The Worker, the database and the AI pipeline are not built yet. Nothing in this repo claims otherwise.
+> **Status: working on local Cloudflare dev.** Import, entity resolution, lapse scoring, drafting, merge review and the call list all run end to end against real OpenAI Decisions and gpt-5.5 calls. Not yet deployed. All data in `public/samples/` is fictional.
+
+![Today](docs/screens/today.png)
 
 ## The problem
 
@@ -21,6 +23,14 @@ So one donor ends up in the database as "Rosa Delgado", "Rosa M. Delgado" and "R
 3. **See who's slipping.** Donors whose expected gift is late, ranked by dollars at risk.
 4. **Make the call.** A note drafted only from that donor's real record, with the facts it used shown next to it.
 
+## Screens
+
+| Duplicates | Donor |
+| --- | --- |
+| ![Duplicates](docs/screens/duplicates.png) | ![Donor](docs/screens/donor.png) |
+| **Import run** | **Donors** |
+| ![Import run](docs/screens/imports.png) | ![Donors](docs/screens/donors.png) |
+
 ## How the AI is used
 
 Every judgment call goes through the [OpenAI Decisions API](https://developers.openai.com/api/docs/guides/decisions), which returns a probability for a typed question instead of free text:
@@ -33,30 +43,43 @@ Every judgment call goes through the [OpenAI Decisions API](https://developers.o
 
 Drafted notes use a chat model and are limited to the facts passed in. The UI shows each question and its probability, so the model's work is visible rather than implied.
 
+## How it works
+
+An import is a Cloudflare Workflow with durable steps that each retry on their own:
+
+1. **Upload to storage** (R2). Originals kept as uploaded.
+2. **Parse and normalize** (Workers). Any CSV column layout; names, emails, phones, street suffixes, dates.
+3. **Exact matches** (D1). Same email or phone merges automatically.
+4. **Embed** (Workers AI, `bge-base-en-v1.5`) and **find candidate pairs** by surname plus initial, street or embedding similarity.
+5. **Judge every pair** (OpenAI Decisions predicate). Every AI-suggested merge goes to a person for approval.
+6. **Build donor records** (D1). Cadence (monthly, every Give Miami Day, every June…), the lapse window and revenue at risk are computed in code.
+7. **Score lapse risk and best channel** (OpenAI Decisions score and choice, one of each per donor).
+8. **Draft outreach** (gpt-5.5, from the donor's record only) and **fact-check each note** (Decisions predicate: claims not in the record?).
+
+Merging a pair in the UI rebuilds that donor, re-scores them live with Decisions, and redrafts their note.
+
 ## Stack
 
-All on Cloudflare.
+- Cloudflare **Workers** (Hono API + static assets via the Vite plugin), **D1**, **R2**, **Workflows**, **Workers AI**
+- **OpenAI Decisions** (`gpt-6-luna`) for every judgment, **gpt-5.5** (Responses API) for notes
+- Vanilla TypeScript front end, Vitest for the pure logic
 
-- **Workers** for the API and static assets
-- **D1** for donors, source rows and the merge log
-- **R2** for uploaded exports
-- **Workflows** for the import pipeline as durable steps
-- **Durable Objects** for live board state over WebSocket
-- **Agents SDK** for the follow-up agent
-- **Workers AI** embeddings with **Vectorize** for candidate matching before the Decisions call
-- **OpenAI Decisions** for judgments and drafted notes
-
-## Design
-
-Dense, professional SaaS (13px Geist, data tables, one accent) on frosted glass over a slow gradient. Donor faces carry a badge for how many source records merged into them. A resolution flow draws how rows became people, and the merge review blooms over a blurred app. OpenAI Decisions calls are shown live in the product.
-
-`mockups/v5/index.html` is the current prototype: Today (with the resolution flow and merge modal), Duplicates, Donor and Import run. Earlier rounds are in `mockups/v2` to `v4`.
-
-## Run the prototype
+## Run locally
 
 ```bash
-open mockups/v5/index.html
+npm install
+cp .dev.vars.example .dev.vars        # then put your OpenAI key in it
+npx wrangler d1 migrations apply tidewatch --local
+npx vite --port 8790                  # Workers AI calls need a Cloudflare login or CLOUDFLARE_API_TOKEN
 ```
+
+Open `http://localhost:8790`, click **Use sample data**, and watch the import run.
+
+```bash
+npx vitest run --config vitest.config.ts --maxWorkers=2
+```
+
+Regenerate the sample exports with `python3 scripts/gen_sample.py`.
 
 ## Data
 
