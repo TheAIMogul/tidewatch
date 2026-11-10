@@ -1,1 +1,3 @@
 OPENAI_API_KEY=sk-...
+# Unlocks writes (imports, merges, notes, drafts) for one browser at /api/unlock. Any long random string.
+ADMIN_KEY=change-me

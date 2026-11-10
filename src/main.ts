@@ -34,6 +34,7 @@ const riskColor = (p: number | null) => ((p ?? 0) >= 0.6 ? "#D4473A" : (p ?? 0) 
 function gauge(p: number | null, size = 56) {
   return `<div class="gauge" style="width:${size}px;height:${size}px"><svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${ring(p, size, 5, (p ?? 0) >= 0.8 ? "#0E7C6B" : (p ?? 0) >= 0.5 ? "#B4741A" : "#D4473A").replace(/^<svg[^>]*>|<\/svg>$/g, "")}</svg><div class="v">${two(p)}</div></div>`;
 }
+window.addEventListener("unhandledrejection", (e) => { const m = (e.reason as any)?.message; if (m) toast(m); });
 function toast(msg: string) { const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout((toast as any).t); (toast as any).t = setTimeout(() => t.classList.remove("on"), 3200); }
 
 async function api<R>(path: string, init?: RequestInit): Promise<R> {
@@ -459,8 +460,7 @@ async function renderDonors(v: HTMLElement) {
 // ---------- settings ----------
 function renderSettings(v: HTMLElement) {
   v.innerHTML = `<div class="ph"><div><h1>Settings</h1><p>Workspace for ${esc(S!.org)}.</p></div></div>
-    <div class="card" style="max-width:560px"><div class="ch"><h3>Demo data</h3></div><div style="padding:14px 16px;display:flex;align-items:center;gap:12px"><div style="flex:1;color:var(--fg-2)">Wipe every donor, merge, note and Decisions log entry, and start from an empty workspace.</div><button class="btn" id="reset" style="color:var(--risk)">Reset demo data</button></div></div>`;
-  $("#reset").addEventListener("click", async () => { if (!confirm("Erase all imported data and start over?")) return; await post("/reset"); sig = ""; location.hash = "today"; location.reload(); });
+    <div class="card" style="max-width:560px"><div class="ch"><h3>Demo data</h3></div><div style="padding:14px 16px;color:var(--fg-2)">This public demo is read-only. Imports, merges, notes and new drafts are turned off for visitors.</div></div>`;
 }
 
 // ---------- story (for the big screen) ----------
