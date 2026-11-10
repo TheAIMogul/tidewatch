@@ -4,6 +4,7 @@ import { STEPS, rebuildDonor, rerank, scoreDonors, draftFor, checkDrafts } from 
 import { sourceMeta, parseCsv, jaroWinkler, normStreet } from "./lib/normalize";
 import { DECISIONS_MODEL } from "./lib/openai";
 import { runPipeline } from "./workflow";
+import { ADMIN_COOKIE, READ_ONLY, isAdmin, needsAdmin, sameSecret } from "./lib/guard";
 
 export { ImportWorkflow } from "./workflow";
 
@@ -11,6 +12,34 @@ const app = new Hono<{ Bindings: Env }>().basePath("/api");
 const now = () => new Date().toISOString();
 
 app.onError((err, c) => { console.error(err); return c.json({ error: String(err?.message ?? err) }, 500); });
+
+// ---------- write guard ----------
+// The public site is a read-only demo. Anything that changes data or spends OpenAI money
+// needs the admin cookie, which is set once per browser at /api/unlock with ADMIN_KEY.
+// If ADMIN_KEY is not configured, every write is refused (fail closed).
+app.use("*", async (c, next) => {
+  if (!needsAdmin(c.req.method, c.req.path)) return next();
+  if (isAdmin(c.env.ADMIN_KEY, c.req.header("cookie"))) return next();
+  return c.json({ error: READ_ONLY }, 403);
+});
+
+app.get("/me", (c) => c.json({ admin: isAdmin(c.env.ADMIN_KEY, c.req.header("cookie")) }));
+
+const unlockPage = (msg = "") => `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tidewatch · Unlock</title>
+<body style="font:15px/1.5 system-ui,sans-serif;background:#EEF1F6;color:#111113;display:grid;place-items:center;min-height:100vh;margin:0;padding:16px">
+<form method="post" action="/api/unlock" style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:360px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+<h1 style="font-size:18px;margin:0 0 6px">Unlock this browser</h1><p style="margin:0 0 16px;color:#55555D;font-size:13px">Turns on imports, merges, notes and drafts for this browser only.</p>
+${msg ? `<p style="color:#D4473A;font-size:13px;margin:0 0 12px">${msg}</p>` : ""}
+<input name="key" type="password" autocomplete="current-password" placeholder="Admin key" required style="width:100%;box-sizing:border-box;height:40px;padding:0 12px;border:1px solid rgba(12,12,14,.16);border-radius:10px;font:inherit">
+<button style="margin-top:12px;width:100%;height:40px;border:0;border-radius:999px;background:#0E7C6B;color:#fff;font:600 14px system-ui">Unlock</button></form></body>`;
+app.get("/unlock", (c) => c.html(unlockPage()));
+app.post("/unlock", async (c) => {
+  const form = await c.req.parseBody();
+  const key = typeof form.key === "string" ? form.key : "";
+  if (!sameSecret(key, c.env.ADMIN_KEY)) return c.html(unlockPage("That key didn’t match."), 403);
+  c.header("Set-Cookie", `${ADMIN_COOKIE}=${encodeURIComponent(key)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=31536000`);
+  return c.redirect("/", 303);
+});
 
 // ---------- state ----------
 async function totals(env: Env): Promise<T.Totals> {
@@ -328,7 +357,7 @@ app.post("/donors/:id/notes", async (c) => {
   return c.json(await addNote(c.env, id, "note", text));
 });
 
-// ---------- import / reset ----------
+// ---------- import ----------
 const WIPE = ["DELETE FROM donor_notes", "DELETE FROM gifts", "DELETE FROM records", "DELETE FROM donors", "DELETE FROM candidates", "DELETE FROM outreach", "DELETE FROM sources"];
 
 app.post("/import", async (c) => {
@@ -357,11 +386,6 @@ app.post("/import", async (c) => {
     c.executionCtx.waitUntil(runPipeline(env, runId).catch((err) => console.error(err)));
   }
   return c.json({ runId });
-});
-
-app.post("/reset", async (c) => {
-  await c.env.DB.batch([...WIPE, "DELETE FROM decisions", "DELETE FROM runs"].map((s) => c.env.DB.prepare(s)));
-  return c.json({ ok: true });
 });
 
 export default app;
